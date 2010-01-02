@@ -189,7 +189,7 @@ int main(void)
 	track = sr_track_new();
 	track->source = 'P';
 
-	g_timeout_add_seconds(60, timeout, NULL);
+	g_timeout_add_seconds(10 * 60, timeout, NULL);
 
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
