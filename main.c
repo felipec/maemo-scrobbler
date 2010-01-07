@@ -22,8 +22,10 @@ metadata_callback(MafwRenderer *self,
 	sr_track_t *t;
 	t = sr_track_dup(track);
 	sr_session_add_track(lastfm, t);
+	sr_session_submit(lastfm);
 	t = sr_track_dup(track);
 	sr_session_add_track(librefm, t);
+	sr_session_submit(librefm);
 }
 
 static void
@@ -100,14 +102,6 @@ renderer_added_cb(MafwRegistry *registry,
 			 "metadata-changed",
 			 G_CALLBACK(metadata_changed_cb),
 			 user_data);
-}
-
-static gboolean
-timeout(void *data)
-{
-	sr_session_submit(lastfm);
-	sr_session_submit(librefm);
-	return TRUE;
 }
 
 static void error_cb(int fatal,
@@ -195,8 +189,6 @@ int main(void)
 
 	track = sr_track_new();
 	track->source = 'P';
-
-	g_timeout_add_seconds(10 * 60, timeout, NULL);
 
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
