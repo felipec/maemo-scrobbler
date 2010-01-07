@@ -9,6 +9,7 @@
 static GMainLoop *main_loop;
 static GKeyFile *keyfile;
 static sr_session_t *lastfm;
+static sr_session_t *librefm;
 static sr_track_t *track;
 
 static void
@@ -21,6 +22,8 @@ metadata_callback(MafwRenderer *self,
 	sr_track_t *t;
 	t = sr_track_dup(track);
 	sr_session_add_track(lastfm, t);
+	t = sr_track_dup(track);
+	sr_session_add_track(librefm, t);
 }
 
 static void
@@ -63,9 +66,11 @@ state_changed_cb(MafwRenderer *renderer,
 		break;
 	case Paused:
 		sr_session_pause(lastfm);
+		sr_session_pause(librefm);
 		break;
 	case Stopped:
 		sr_session_pause(lastfm);
+		sr_session_pause(librefm);
 		break;
 	default:
 		break;
@@ -101,6 +106,7 @@ static gboolean
 timeout(void *data)
 {
 	sr_session_submit(lastfm);
+	sr_session_submit(librefm);
 	return TRUE;
 }
 
@@ -183,7 +189,8 @@ int main(void)
 		goto leave;
 
 	lastfm = get_session(SR_LASTFM_URL, "lastfm");
-	if (!lastfm)
+	librefm = get_session(SR_LIBREFM_URL, "librefm");
+	if (!lastfm && !librefm)
 		goto leave;
 
 	track = sr_track_new();
@@ -198,6 +205,7 @@ leave:
 	sr_track_free(track);
 
 	sr_session_free(lastfm);
+	sr_session_free(librefm);
 	g_key_file_free(keyfile);
 	return 0;
 }
