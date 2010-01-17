@@ -175,7 +175,7 @@ int main(void)
 
 	keyfile = g_key_file_new();
 
-	file = g_build_filename(g_get_user_config_dir(),
+	file = g_build_filename(g_get_home_dir(), ".osso",
 				"scrobbler", NULL);
 
 	ok = g_key_file_load_from_file(keyfile, file, G_KEY_FILE_NONE, NULL);
