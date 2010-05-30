@@ -120,20 +120,20 @@ static void error_cb(int fatal,
 }
 
 static gboolean
-load_cred(sr_session_t *s,
-	  const char *id)
+authenticate_session(struct service *s)
 {
 	gchar *username, *password;
 	gboolean ok;
 
-	username = g_key_file_get_string(keyfile, id, "username", NULL);
-	password = g_key_file_get_string(keyfile, id, "password", NULL);
+	username = g_key_file_get_string(keyfile, s->id, "username", NULL);
+	password = g_key_file_get_string(keyfile, s->id, "password", NULL);
 
 	ok = username && password;
 	if (!ok)
 		goto leave;
 
-	sr_session_set_cred(s, username, password);
+	sr_session_set_cred(s->session, username, password);
+	sr_session_handshake(s->session);
 
 leave:
 	g_free(username);
@@ -148,11 +148,6 @@ get_session(struct service *service)
 	sr_session_t *s;
 	s = sr_session_new(service->url, "tst", "1.0");
 	s->error_cb = error_cb;
-	if (!load_cred(s, service->id)) {
-		sr_session_free(s);
-		return;
-	}
-	sr_session_handshake(s);
 	service->session = s;
 }
 
@@ -162,11 +157,6 @@ authenticate(void)
 	gboolean ok;
 	unsigned i;
 
-	for (i = 0; i < G_N_ELEMENTS(services); i++) {
-		sr_session_free(services[i].session);
-		services[i].session = NULL;
-	}
-
 	keyfile = g_key_file_new();
 
 	ok = g_key_file_load_from_file(keyfile, conf_file, G_KEY_FILE_NONE, NULL);
@@ -174,7 +164,7 @@ authenticate(void)
 		goto leave;
 
 	for (i = 0; i < G_N_ELEMENTS(services); i++)
-		get_session(&services[i]);
+		authenticate_session(&services[i]);
 
 leave:
 	g_key_file_free(keyfile);
@@ -214,6 +204,9 @@ int main(void)
 		g_thread_init(NULL);
 
 	conf_file = g_build_filename(g_get_home_dir(), ".osso", "scrobbler", NULL);
+
+	for (i = 0; i < G_N_ELEMENTS(services); i++)
+		get_session(&services[i]);
 
 	authenticate();
 	monitor_conf();
