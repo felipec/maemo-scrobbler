@@ -186,6 +186,9 @@ int main(void)
 	if (!g_thread_supported())
 		g_thread_init(NULL);
 
+	if (!authenticate())
+		return -1;
+
 	registry = MAFW_REGISTRY(mafw_registry_get_instance());
 	if (!registry)
 		g_error("Failed to get register");
@@ -197,9 +200,6 @@ int main(void)
 	g_signal_connect(registry,
 			 "renderer-added",
 			 G_CALLBACK(renderer_added_cb), NULL);
-
-	if (!authenticate())
-		return -1;
 
 	track = sr_track_new();
 	track->source = 'P';
