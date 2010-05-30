@@ -67,8 +67,6 @@ state_changed_cb(MafwRenderer *renderer,
 	case Transitioning:
 		break;
 	case Paused:
-		sr_session_pause(lastfm);
-		sr_session_pause(librefm);
 		break;
 	case Stopped:
 		sr_session_pause(lastfm);
