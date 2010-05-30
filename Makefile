@@ -31,10 +31,10 @@ all:
 libscrobble.a: scrobble.o
 libscrobble.a: override CFLAGS += $(GLIB_CFLAGS) $(SOUP_CFLAGS)
 
-mafw-scrobbler: main.o libscrobble.a
-mafw-scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS)
-mafw-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(SCROBBLE_LIBS)
-bins += mafw-scrobbler
+maemo-scrobbler: main.o libscrobble.a
+maemo-scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS)
+maemo-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(SCROBBLE_LIBS)
+bins += maemo-scrobbler
 
 libcp-scrobbler.so: control_panel.o
 libcp-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS) $(OSSO_CFLAGS)
@@ -53,11 +53,11 @@ QUIET_CLEAN = @echo '   CLEAN      '$@;
 endif
 
 install: $(bins) $(libs)
-	install -m 755 mafw-scrobbler -D $(D)/usr/bin/mafw-scrobbler
+	install -m 755 maemo-scrobbler -D $(D)/usr/bin/maemo-scrobbler
 	install -m 644 libcp-scrobbler.so -D \
 		$(D)/usr/lib/hildon-control-panel/libcp-scrobbler.so
-	install -m 644 mafw-scrobbler.desktop -D \
-		$(D)/usr/share/applications/hildon-control-panel/mafw-scrobbler.desktop
+	install -m 644 maemo-scrobbler.desktop -D \
+		$(D)/usr/share/applications/hildon-control-panel/maemo-scrobbler.desktop
 	install -m 644 fm.png -D $(D)/usr/share/icons/hicolor/48x48/apps/fm.png
 
 %.a::
