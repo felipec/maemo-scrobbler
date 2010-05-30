@@ -115,8 +115,6 @@ static void error_cb(int fatal,
 		     const char *msg)
 {
 	g_warning(msg);
-	if (fatal)
-		g_main_loop_quit(main_loop);
 }
 
 static gboolean
