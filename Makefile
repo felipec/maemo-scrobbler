@@ -32,12 +32,17 @@ bins += mafw-scrobbler
 
 all: libscrobble.a $(bins)
 
+D = $(DESTDIR)
+
 # pretty print
 ifndef V
 QUIET_CC    = @echo '   CC         '$@;
 QUIET_LINK  = @echo '   LINK       '$@;
 QUIET_CLEAN = @echo '   CLEAN      '$@;
 endif
+
+install: $(bins)
+	install -m 755 mafw-scrobbler -D $(D)/usr/bin/mafw-scrobbler
 
 %.a::
 	$(QUIET_LINK)$(AR) rcs $@ $^
