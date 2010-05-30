@@ -4,6 +4,7 @@
 #include <gio/gio.h>
 
 #include <string.h>
+#include <stignal.h>
 
 #include "scrobble.h"
 
@@ -36,13 +37,23 @@ metadata_callback(MafwRenderer *self,
 	unsigned i;
 	if (skip_track) {
 		skip_track = 0;
-		return;
+		goto clear;
 	}
+	if (!track->artist || !track->title)
+		goto clear;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
 		sr_session_add_track(s->session, sr_track_dup(track));
 		sr_session_submit(s->session);
 	}
+clear:
+	g_free(track->artist);
+	track->artist = NULL;
+	g_free(track->title);
+	track->title = NULL;
+	track->length = 0;
+	g_free(track->album);
+	track->album = NULL;
 }
 
 static void
@@ -72,11 +83,12 @@ metadata_changed_cb(MafwRenderer *renderer,
 }
 
 static void
-store(void)
+stop(void)
 {
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		sr_session_pause(s->session);
 		sr_session_store_list(s->session, s->cache);
 	}
 }
@@ -94,12 +106,7 @@ state_changed_cb(MafwRenderer *renderer,
 						   user_data);
 		break;
 	case Stopped:
-		{
-			unsigned i;
-			for (i = 0; i < G_N_ELEMENTS(services); i++)
-				sr_session_pause(services[i].session);
-		}
-		store();
+		stop();
 		break;
 	default:
 		break;
@@ -225,8 +232,18 @@ monitor_conf(void)
 static gboolean
 timeout(void *data)
 {
-	store();
+	unsigned i;
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_store_list(s->session, s->cache);
+	}
 	return TRUE;
+}
+
+static void
+signal_handler(int signal)
+{
+	g_main_loop_quit(main_loop);
 }
 
 int main(void)
@@ -267,10 +284,16 @@ int main(void)
 
 	g_timeout_add_seconds(10 * 60, timeout, NULL);
 
+	signal(SIGINT, signal_handler);
+
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
 
-	store();
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_pause(s->session);
+		sr_session_store_list(s->session, s->cache);
+	}
 
 	sr_track_free(track);
 
