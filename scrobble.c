@@ -86,6 +86,8 @@ void sr_session_set_cred(sr_session_t *s,
 			 char *password)
 {
 	struct sr_session_priv *priv = s->priv;
+	free(priv->user);
+	g_free(priv->hash_pwd);
 	priv->user = strdup(user);
 	priv->hash_pwd = g_compute_checksum_for_string(G_CHECKSUM_MD5, password, -1);
 }
