@@ -36,13 +36,21 @@ metadata_callback(MafwRenderer *self,
 	unsigned i;
 	if (skip_track) {
 		skip_track = 0;
-		return;
+		goto clear;
 	}
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
 		sr_session_add_track(s->session, sr_track_dup(track));
 		sr_session_submit(s->session);
 	}
+clear:
+	g_free(track->artist);
+	track->artist = NULL;
+	g_free(track->title);
+	track->title = NULL;
+	track->length = 0;
+	g_free(track->album);
+	track->album = NULL;
 }
 
 static void
