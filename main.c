@@ -19,12 +19,9 @@ metadata_callback(MafwRenderer *self,
 		  gpointer user_data,
 		  const GError *error)
 {
-	sr_track_t *t;
-	t = sr_track_dup(track);
-	sr_session_add_track(lastfm, t);
+	sr_session_add_track(lastfm, sr_track_dup(track));
 	sr_session_submit(lastfm);
-	t = sr_track_dup(track);
-	sr_session_add_track(librefm, t);
+	sr_session_add_track(librefm, sr_track_dup(track));
 	sr_session_submit(librefm);
 }
 
@@ -63,10 +60,6 @@ state_changed_cb(MafwRenderer *renderer,
 		mafw_renderer_get_current_metadata(renderer,
 						   metadata_callback,
 						   user_data);
-		break;
-	case Transitioning:
-		break;
-	case Paused:
 		break;
 	case Stopped:
 		sr_session_pause(lastfm);
@@ -114,7 +107,7 @@ static gboolean
 load_cred(sr_session_t *s,
 	  const char *id)
 {
-	gchar *username = NULL, *password = NULL;
+	gchar *username, *password;
 	gboolean ok;
 
 	username = g_key_file_get_string(keyfile, id, "username", NULL);
@@ -156,8 +149,7 @@ authenticate(void)
 
 	keyfile = g_key_file_new();
 
-	file = g_build_filename(g_get_home_dir(), ".osso",
-				"scrobbler", NULL);
+	file = g_build_filename(g_get_home_dir(), ".osso", "scrobbler", NULL);
 
 	ok = g_key_file_load_from_file(keyfile, file, G_KEY_FILE_NONE, NULL);
 	if (!ok)
