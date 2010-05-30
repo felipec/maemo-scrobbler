@@ -23,32 +23,32 @@ SCROBBLE_LIBS := $(SOUP_LIBS)
 all:
 
 libscrobble.a: scrobble.o
-libscrobble.a: CFLAGS := $(CFLAGS) $(GLIB_CFLAGS) $(SOUP_CFLAGS)
+libscrobble.a: override CFLAGS += $(GLIB_CFLAGS) $(SOUP_CFLAGS)
 
 mafw-scrobbler: main.o libscrobble.a
-mafw-scrobbler: CFLAGS := $(CFLAGS) $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS)
-mafw-scrobbler: LIBS := $(LIBS) $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(SCROBBLE_LIBS)
-binaries += mafw-scrobbler
+mafw-scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS)
+mafw-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(SCROBBLE_LIBS)
+bins += mafw-scrobbler
 
-all: libscrobble.a $(binaries)
+all: libscrobble.a $(bins)
 
 # pretty print
-V = @
-Q = $(V:y=)
-QUIET_CC    = $(Q:@=@echo '   CC         '$@;)
-QUIET_LINK  = $(Q:@=@echo '   LINK       '$@;)
-QUIET_CLEAN = $(Q:@=@echo '   CLEAN      '$@;)
+ifndef V
+QUIET_CC    = @echo '   CC         '$@;
+QUIET_LINK  = @echo '   LINK       '$@;
+QUIET_CLEAN = @echo '   CLEAN      '$@;
+endif
 
 %.a::
 	$(QUIET_LINK)$(AR) rcs $@ $^
 
-$(binaries):
+$(bins):
 	$(QUIET_LINK)$(CC) $(LDFLAGS) $(LIBS) -o $@ $^
 
 %.o:: %.c
 	$(QUIET_CC)$(CC) $(CFLAGS) -MMD -o $@ -c $<
 
 clean:
-	$(QUIET_CLEAN)$(RM) *.o *.d *.a $(binaries)
+	$(QUIET_CLEAN)$(RM) *.o *.d *.a $(bins)
 
 -include *.d
