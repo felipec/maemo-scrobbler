@@ -38,6 +38,7 @@ sr_session_t *sr_session_new(const char *url,
 			     const char *client_ver);
 void sr_session_free(sr_session_t *s);
 void sr_session_set_cred(sr_session_t *s, char *user, char *password);
+void sr_session_set_cred_hash(sr_session_t *s, char *user, char *hash_pwd);
 
 void sr_session_add_track(sr_session_t *s, sr_track_t *t);
 int sr_session_load_list(sr_session_t *s, const char *file);

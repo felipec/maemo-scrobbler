@@ -42,9 +42,9 @@ sr_session_new(const char *url,
 	s->priv = priv = calloc(1, sizeof(*priv));
 	priv->queue = g_queue_new();
 	priv->queue_mutex = g_mutex_new();
-	priv->url = strdup(url);
-	priv->client_id = strdup(client_id);
-	priv->client_ver = strdup(client_ver);
+	priv->url = g_strdup(url);
+	priv->client_id = g_strdup(client_id);
+	priv->client_ver = g_strdup(client_ver);
 	priv->soup = soup_session_async_new();
 	priv->handshake_delay = 1;
 	return s;
@@ -69,10 +69,10 @@ sr_session_free(sr_session_t *s)
 	}
 	g_queue_free(priv->queue);
 	g_mutex_free(priv->queue_mutex);
-	free(priv->url);
-	free(priv->client_id);
-	free(priv->client_ver);
-	free(priv->user);
+	g_free(priv->url);
+	g_free(priv->client_id);
+	g_free(priv->client_ver);
+	g_free(priv->user);
 	g_free(priv->hash_pwd);
 	g_free(priv->session_id);
 	g_free(priv->now_playing_url);
@@ -86,10 +86,21 @@ void sr_session_set_cred(sr_session_t *s,
 			 char *password)
 {
 	struct sr_session_priv *priv = s->priv;
-	free(priv->user);
+	g_free(priv->user);
 	g_free(priv->hash_pwd);
-	priv->user = strdup(user);
+	priv->user = g_strdup(user);
 	priv->hash_pwd = g_compute_checksum_for_string(G_CHECKSUM_MD5, password, -1);
+}
+
+void sr_session_set_cred_hash(sr_session_t *s,
+			      char *user,
+			      char *hash_pwd)
+{
+	struct sr_session_priv *priv = s->priv;
+	g_free(priv->user);
+	g_free(priv->hash_pwd);
+	priv->user = g_strdup(user);
+	priv->hash_pwd = g_strdup(hash_pwd);
 }
 
 sr_track_t *
@@ -229,6 +240,9 @@ sr_session_load_list(sr_session_t *s,
 	f = fopen(file, "r");
 	if (!f)
 		return 1;
+
+	/* just to avoid warnings */
+	k = 0; p = NULL;
 
 	g_mutex_lock(priv->queue_mutex);
 	t = sr_track_new();
