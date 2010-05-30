@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <libmafw/mafw.h>
 #include <libmafw-shared/mafw-shared.h>
+#include <gio/gio.h>
 
 #include <string.h>
 
@@ -9,6 +10,7 @@
 static GMainLoop *main_loop;
 static GKeyFile *keyfile;
 static sr_track_t *track;
+static char *conf_file;
 
 struct service {
 	const char *id;
@@ -154,31 +156,51 @@ get_session(struct service *service)
 	service->session = s;
 }
 
-static gboolean
+static void
 authenticate(void)
 {
-	gchar *file;
 	gboolean ok;
 	unsigned i;
 
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		sr_session_free(services[i].session);
+		services[i].session = NULL;
+	}
+
 	keyfile = g_key_file_new();
 
-	file = g_build_filename(g_get_home_dir(), ".osso", "scrobbler", NULL);
-
-	ok = g_key_file_load_from_file(keyfile, file, G_KEY_FILE_NONE, NULL);
+	ok = g_key_file_load_from_file(keyfile, conf_file, G_KEY_FILE_NONE, NULL);
 	if (!ok)
 		goto leave;
 
-	g_free(file);
-
 	for (i = 0; i < G_N_ELEMENTS(services); i++)
 		get_session(&services[i]);
-	if (!services[0].session && !services[1].session)
-		goto leave;
 
 leave:
 	g_key_file_free(keyfile);
-	return ok;
+}
+
+static void
+conf_changed(GFileMonitor *monitor,
+	     GFile *file,
+	     GFile *other_file,
+	     GFileMonitorEvent event_type,
+	     gpointer user_data)
+{
+	if (event_type == G_FILE_MONITOR_EVENT_CHANGED)
+		authenticate();
+}
+
+static void
+monitor_conf(void)
+{
+	GFile *file;
+	GFileMonitor *monitor;
+
+	file = g_file_new_for_path(conf_file);
+	monitor = g_file_monitor_file(file, G_FILE_MONITOR_NONE, NULL, NULL);
+	g_signal_connect(monitor, "changed", G_CALLBACK(conf_changed), NULL);
+	g_object_unref(file);
 }
 
 int main(void)
@@ -191,8 +213,10 @@ int main(void)
 	if (!g_thread_supported())
 		g_thread_init(NULL);
 
-	if (!authenticate())
-		return -1;
+	conf_file = g_build_filename(g_get_home_dir(), ".osso", "scrobbler", NULL);
+
+	authenticate();
+	monitor_conf();
 
 	registry = MAFW_REGISTRY(mafw_registry_get_instance());
 	if (!registry)
@@ -217,5 +241,6 @@ int main(void)
 	for (i = 0; i < G_N_ELEMENTS(services); i++)
 		sr_session_free(services[i].session);
 
+	g_free(conf_file);
 	return 0;
 }
