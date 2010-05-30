@@ -82,11 +82,12 @@ metadata_changed_cb(MafwRenderer *renderer,
 }
 
 static void
-store(void)
+stop(void)
 {
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		sr_session_pause(s->session);
 		sr_session_store_list(s->session, s->cache);
 	}
 }
@@ -104,12 +105,7 @@ state_changed_cb(MafwRenderer *renderer,
 						   user_data);
 		break;
 	case Stopped:
-		{
-			unsigned i;
-			for (i = 0; i < G_N_ELEMENTS(services); i++)
-				sr_session_pause(services[i].session);
-		}
-		store();
+		stop();
 		break;
 	default:
 		break;
@@ -235,7 +231,11 @@ monitor_conf(void)
 static gboolean
 timeout(void *data)
 {
-	store();
+	unsigned i;
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_store_list(s->session, s->cache);
+	}
 	return TRUE;
 }
 
@@ -280,7 +280,11 @@ int main(void)
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
 
-	store();
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_pause(s->session);
+		sr_session_store_list(s->session, s->cache);
+	}
 
 	sr_track_free(track);
 
