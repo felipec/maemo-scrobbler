@@ -1,0 +1,2 @@
+#!/bin/sh
+dsmetool -k /usr/bin/maemo-scrobbler

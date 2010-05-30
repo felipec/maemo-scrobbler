@@ -20,6 +20,7 @@ install:
 binary-arch: build install
 	dh_testdir
 	dh_testroot
+	dh_installxsession -u 'post 85'
 	dh_install --sourcedir=debian/tmp
 	dh_strip --dbg-package=maemo-scrobbler-dbg
 	dh_compress
