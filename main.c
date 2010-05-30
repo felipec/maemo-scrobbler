@@ -4,6 +4,7 @@
 #include <gio/gio.h>
 
 #include <string.h>
+#include <stignal.h>
 
 #include "scrobble.h"
 
@@ -239,6 +240,12 @@ timeout(void *data)
 	return TRUE;
 }
 
+static void
+signal_handler(int signal)
+{
+	g_main_loop_quit(main_loop);
+}
+
 int main(void)
 {
 	GError *error = NULL;
@@ -276,6 +283,8 @@ int main(void)
 	track->source = 'P';
 
 	g_timeout_add_seconds(10 * 60, timeout, NULL);
+
+	signal(SIGINT, signal_handler);
 
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
