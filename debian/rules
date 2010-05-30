@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+build:
+	dh_testdir
+	$(MAKE)
+
+clean:
+	dh_testdir
+	dh_testroot
+	dh_clean
+	$(MAKE) clean
+
+install:
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_install --sourcedir=debian/tmp
+	dh_strip --dbg-package=maemo-scrobbler-dbg
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	maemo-optify	
+	dh_md5sums
+	dh_builddeb
+
+binary-indep:
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-arch binary-indep binary install

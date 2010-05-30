@@ -1,0 +1,39 @@
+Source: maemo-scrobbler
+Section: user/multimedia
+Priority: optional
+Maintainer: Felipe Contreras <felipe.contreras@gmail.com>
+Build-Depends: debhelper (>= 5), pkg-config, upstart-dev, libsoup2.4-dev, libglib2.0-dev, libmafw-shared0-dev, libmafw0-dev, hildon-control-panel-dev, libosso-dev, libhildon1-dev, libgtk2.0-dev
+Standards-Version: 3.8.0
+
+Package: maemo-scrobbler
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}, hildon-libs-l10n-mr | hildon-libs-l10n-mr0
+Description: Maemo scrobbler (last.fm + libre.fm)
+ maemo-scrobbler allows to scrobble to multiple services like last.fm and
+ libre.fm by listening to MAFW.
+XB-Maemo-Display-Name: Maemo scrobbler
+XB-Maemo-Icon-26:
+ iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A
+ /wD/oL2nkwAAAAlwSFlzAAAN1wAADdcBQiibeAAAAAd0SU1FB9oFHgsjBcXBVjoAAAMnSURBVGje
+ 7ZZPiFVlGMZ/z3dntDzH0RqS3Eq1SHKRMiBJRLmJCDIobaGbRtpKmHOvYAQT3TsFIQRh6wiXQhS1
+ kaiFKd4gqEUhQhhtxDCZe0drOudpcc49c3KuM5f+B99vcy/3fuf93ud7n/d7D0QikUgkEolEIpFI
+ 5N9Bf1WgfosTwH7DDcxZBd5MXuP0/0LAwgz7LE7+LprB4um0zan/vIBeC6tKG9kguJZ02Nhv8ZTN
+ lMSUza5fA+vGzauGbZgLhlPrO3x29QjpmsAjFvcAF9I2H/4jAnpNEokegA0Se4C7PcZ76SzzvSaX
+ Je4CbCNBZmgAlqocZm2OoTKhonpXZLYmHS6vtH/4kyf/POJtD05D5DabcvghnWW+3OCMB38LEA2p
+ qNTgAG2OQVVFSiGTiI9Wy2GZgC480YWvzoO78M15OLLC808KDgw2tgkS7wR4v/8SmwAy0VFxwoM1
+ NnwhmLNxKRwJ2Xxtk9Ws+GD/KJMjC+jCC4YPDFvLpO4D5rpwbqj/zOYihTKR6hsQ2ACwvs3ZpM3L
+ NdOqcYOHkw5NxI+1cJ+mHR5AtDBL5srZPJKAczBmOKGilFpyBQBTwyrhcXbm4t6ql8SiA7ud8+wC
+ fDdYd63JxkEgAdlaslL29dqtdbz8/KTaveiFDSsJGKsp2aFbN7aBvcDr9R/TWfJ+i4WBoW3ytL38
+ 7g8NbicrFtkQQmWdai+r6BkCgbzqAwxXR6qA4A6vcFsJ1jBc2c+1cnlIoz8UMj52/VhypvtNpoE7
+ a3Y8eH2GtZh9NVFgHvUrNEYR8PmtFpVZfb9sgLWYlnmXpSYe77d4Y36Gx2pxJw3b6p7MxYuGZ4B1
+ tXB7MzEmOISqnrLgrd4iyaoW2g4/deGk4bmbPGSBFuHAzQ/nZpfE47UyNQyHg0igsJJzLkmcxgSL
+ BqYhcclFA2/BTBgmJG5zPjBP2XxGFjjjl1UFAPRgfwI94KBrV7Jhz064MmQKXiyHF+X0LXYPZZMC
+ 6RxfArv/6NuBD9HQ8aV4I0/iLtwPZDvg2xUG2UQQW/KcRCK1SGySYC4mHc7Ed+VIJBKJRCKRSCTy
+ d/Ibp2MfJ2dFJIcAAAAASUVORK5CYII=
+
+
+Package: maemo-scrobbler-dbg
+Section: devel
+Architecture: any
+Depends: ${misc:Depends}, maemo-scrobbler (= ${binary:Version})
+Description: Debug symbols for maemo-scrobbler

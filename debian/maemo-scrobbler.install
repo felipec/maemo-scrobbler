@@ -1,0 +1,4 @@
+usr/bin/maemo-scrobbler
+usr/lib/hildon-control-panel/libcp-scrobbler.so
+usr/share/applications/hildon-control-panel/maemo-scrobbler.desktop
+usr/share/icons/hicolor/48x48/apps/fm.png
