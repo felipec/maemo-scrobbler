@@ -28,7 +28,7 @@ typedef struct sr_session sr_session_t;
 
 struct sr_session {
 	void *priv;
-	void (*error_cb) (int fatal, const char *msg);
+	void (*error_cb) (sr_session_t *s, int fatal, const char *msg);
 };
 
 sr_session_t *sr_session_new(const char *url,

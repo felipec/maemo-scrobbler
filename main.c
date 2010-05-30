@@ -131,7 +131,8 @@ renderer_added_cb(MafwRegistry *registry,
 			 user_data);
 }
 
-static void error_cb(int fatal,
+static void error_cb(sr_session_t *s,
+		     int fatal,
 		     const char *msg)
 {
 	g_warning(msg);

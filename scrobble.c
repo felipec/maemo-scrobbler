@@ -358,7 +358,7 @@ fatal_error(sr_session_t *s,
 	    const char *msg)
 {
 	if (s->error_cb)
-		s->error_cb(true, msg);
+		s->error_cb(s, true, msg);
 }
 
 static void
