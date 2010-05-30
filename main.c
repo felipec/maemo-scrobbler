@@ -8,9 +8,18 @@
 
 static GMainLoop *main_loop;
 static GKeyFile *keyfile;
-static sr_session_t *lastfm;
-static sr_session_t *librefm;
 static sr_track_t *track;
+
+struct service {
+	const char *id;
+	const char *url;
+	sr_session_t *session;
+};
+
+static struct service services[] = {
+	{ .id = "lastfm", .url = SR_LASTFM_URL },
+	{ .id = "librefm", .url = SR_LIBREFM_URL },
+};
 
 static void
 metadata_callback(MafwRenderer *self,
@@ -19,10 +28,12 @@ metadata_callback(MafwRenderer *self,
 		  gpointer user_data,
 		  const GError *error)
 {
-	sr_session_add_track(lastfm, sr_track_dup(track));
-	sr_session_submit(lastfm);
-	sr_session_add_track(librefm, sr_track_dup(track));
-	sr_session_submit(librefm);
+	unsigned i;
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_add_track(s->session, sr_track_dup(track));
+		sr_session_submit(s->session);
+	}
 }
 
 static void
@@ -62,8 +73,11 @@ state_changed_cb(MafwRenderer *renderer,
 						   user_data);
 		break;
 	case Stopped:
-		sr_session_pause(lastfm);
-		sr_session_pause(librefm);
+		{
+			unsigned i;
+			for (i = 0; i < G_N_ELEMENTS(services); i++)
+				sr_session_pause(services[i].session);
+		}
 		break;
 	default:
 		break;
@@ -146,6 +160,7 @@ authenticate(void)
 {
 	gchar *file;
 	gboolean ok;
+	unsigned i;
 
 	keyfile = g_key_file_new();
 
@@ -157,9 +172,11 @@ authenticate(void)
 
 	g_free(file);
 
-	lastfm = get_session(SR_LASTFM_URL, "lastfm");
-	librefm = get_session(SR_LIBREFM_URL, "librefm");
-	if (!lastfm && !librefm)
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		s->session = get_session(s->url, s->id);
+	}
+	if (!services[0].session && !services[1].session)
 		goto leave;
 
 leave:
@@ -171,6 +188,7 @@ int main(void)
 {
 	GError *error = NULL;
 	MafwRegistry *registry;
+	unsigned i;
 
 	g_type_init();
 	if (!g_thread_supported())
@@ -199,7 +217,8 @@ int main(void)
 
 	sr_track_free(track);
 
-	sr_session_free(lastfm);
-	sr_session_free(librefm);
+	for (i = 0; i < G_N_ELEMENTS(services); i++)
+		sr_session_free(services[i].session);
+
 	return 0;
 }
