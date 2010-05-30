@@ -18,6 +18,12 @@ GTHREAD_LIBS := $(shell pkg-config --libs gthread-2.0)
 MAFW_CFLAGS := $(shell pkg-config --cflags mafw-shared mafw)
 MAFW_LIBS := $(shell pkg-config --libs mafw-shared mafw)
 
+HILDON_CFLAGS := $(shell pkg-config --cflags hildon-1 hildon-control-panel)
+HILDON_LIBS := $(shell pkg-config --libs hildon-1 hildon-control-panel)
+
+OSSO_CFLAGS := $(shell pkg-config --cflags libosso)
+OSSO_LIBS := $(shell pkg-config --libs libosso)
+
 SCROBBLE_LIBS := $(SOUP_LIBS)
 
 all:
@@ -30,7 +36,12 @@ mafw-scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAG
 mafw-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(SCROBBLE_LIBS)
 bins += mafw-scrobbler
 
-all: libscrobble.a $(bins)
+libcp-scrobbler.so: control_panel.o
+libcp-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS) $(OSSO_CFLAGS)
+libcp-scrobbler.so: override LIBS += $(HILDON_LIBS) $(OSSO_LIBS)
+libs += libcp-scrobbler.so
+
+all: libscrobble.a $(bins) $(libs)
 
 D = $(DESTDIR)
 
@@ -41,11 +52,19 @@ QUIET_LINK  = @echo '   LINK       '$@;
 QUIET_CLEAN = @echo '   CLEAN      '$@;
 endif
 
-install: $(bins)
+install: $(bins) $(libs)
 	install -m 755 mafw-scrobbler -D $(D)/usr/bin/mafw-scrobbler
+	install -m 644 libcp-scrobbler.so -D \
+		$(D)/usr/lib/hildon-control-panel/libcp-scrobbler.so
+	install -m 644 mafw-scrobbler.desktop -D \
+		$(D)/usr/share/applications/hildon-control-panel/mafw-scrobbler.desktop
+	install -m 644 fm.png -D $(D)/usr/share/icons/hicolor/48x48/apps/fm.png
 
 %.a::
 	$(QUIET_LINK)$(AR) rcs $@ $^
+
+%.so::
+	$(QUIET_LINK)$(CC) $(LDFLAGS) -shared -o $@ $^ $(LIBS)
 
 $(bins):
 	$(QUIET_LINK)$(CC) $(LDFLAGS) $(LIBS) -o $@ $^
@@ -54,6 +73,6 @@ $(bins):
 	$(QUIET_CC)$(CC) $(CFLAGS) -MMD -o $@ -c $<
 
 clean:
-	$(QUIET_CLEAN)$(RM) *.o *.d *.a $(bins)
+	$(QUIET_CLEAN)$(RM) *.o *.d *.a $(bins) $(libs)
 
 -include *.d

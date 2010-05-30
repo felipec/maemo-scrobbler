@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Name=Scrobbler settings
+Comment=Configure your scrobbling accounts
+Type=HildonControlPanelPlugin
+Icon=fm
+X-control-panel-plugin=libcp-scrobbler.so
+Categories=extras
