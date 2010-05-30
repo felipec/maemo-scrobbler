@@ -12,6 +12,7 @@ static GKeyFile *keyfile;
 static sr_track_t *track;
 static char *conf_file;
 static char *cache_dir;
+static int skip_track;
 
 struct service {
 	const char *id;
@@ -33,6 +34,10 @@ metadata_callback(MafwRenderer *self,
 		  const GError *error)
 {
 	unsigned i;
+	if (skip_track) {
+		skip_track = 0;
+		return;
+	}
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
 		sr_session_add_track(s->session, sr_track_dup(track));
@@ -62,6 +67,8 @@ metadata_changed_cb(MafwRenderer *renderer,
 		g_free(track->album);
 		track->album = g_value_dup_string(value);
 	}
+	else if (strcmp(name, "video-codec") == 0)
+		skip_track = 1;
 }
 
 static void
