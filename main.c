@@ -11,11 +11,13 @@ static GMainLoop *main_loop;
 static GKeyFile *keyfile;
 static sr_track_t *track;
 static char *conf_file;
+static char *cache_dir;
 
 struct service {
 	const char *id;
 	const char *url;
 	sr_session_t *session;
+	char *cache;
 };
 
 static struct service services[] = {
@@ -63,6 +65,16 @@ metadata_changed_cb(MafwRenderer *renderer,
 }
 
 static void
+store(void)
+{
+	unsigned i;
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_store_list(s->session, s->cache);
+	}
+}
+
+static void
 state_changed_cb(MafwRenderer *renderer,
 		 MafwPlayState state,
 		 gpointer user_data)
@@ -80,6 +92,7 @@ state_changed_cb(MafwRenderer *renderer,
 			for (i = 0; i < G_N_ELEMENTS(services); i++)
 				sr_session_pause(services[i].session);
 		}
+		store();
 		break;
 	default:
 		break;
@@ -146,6 +159,8 @@ get_session(struct service *service)
 	sr_session_t *s;
 	s = sr_session_new(service->url, "tst", "1.0");
 	s->error_cb = error_cb;
+	service->cache = g_build_filename(cache_dir, service->id, NULL);
+	sr_session_load_list(s, service->cache);
 	service->session = s;
 }
 
@@ -191,6 +206,13 @@ monitor_conf(void)
 	g_object_unref(file);
 }
 
+static gboolean
+timeout(void *data)
+{
+	store();
+	return TRUE;
+}
+
 int main(void)
 {
 	GError *error = NULL;
@@ -202,6 +224,9 @@ int main(void)
 		g_thread_init(NULL);
 
 	conf_file = g_build_filename(g_get_home_dir(), ".osso", "scrobbler", NULL);
+	cache_dir = g_build_filename(g_get_user_cache_dir(), "scrobbler", NULL);
+
+	g_mkdir_with_parents(cache_dir, 0755);
 
 	for (i = 0; i < G_N_ELEMENTS(services); i++)
 		get_session(&services[i]);
@@ -224,14 +249,22 @@ int main(void)
 	track = sr_track_new();
 	track->source = 'P';
 
+	g_timeout_add_seconds(10 * 60, timeout, NULL);
+
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
 
+	store();
+
 	sr_track_free(track);
 
-	for (i = 0; i < G_N_ELEMENTS(services); i++)
-		sr_session_free(services[i].session);
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		g_free(s->cache);
+		sr_session_free(s->session);
+	}
 
+	g_free(cache_dir);
 	g_free(conf_file);
 	return 0;
 }
