@@ -38,6 +38,8 @@ metadata_callback(MafwRenderer *self,
 		skip_track = 0;
 		goto clear;
 	}
+	if (!track->artist || !track->title)
+		goto clear;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
 		sr_session_add_track(s->session, sr_track_dup(track));
