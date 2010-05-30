@@ -138,6 +138,12 @@ static void error_cb(sr_session_t *s,
 	g_warning(msg);
 }
 
+static void scrobble_cb(sr_session_t *s)
+{
+	struct service *service = s->user_data;
+	sr_session_store_list(s, service->cache);
+}
+
 static gboolean
 authenticate_session(struct service *s)
 {
@@ -168,6 +174,7 @@ get_session(struct service *service)
 	s = sr_session_new(service->url, "tst", "1.0");
 	s->user_data = service;
 	s->error_cb = error_cb;
+	s->scrobble_cb = scrobble_cb;
 	service->cache = g_build_filename(cache_dir, service->id, NULL);
 	sr_session_load_list(s, service->cache);
 	service->session = s;
