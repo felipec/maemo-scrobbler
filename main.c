@@ -150,12 +150,37 @@ get_session(const char *url,
 	return s;
 }
 
+static gboolean
+authenticate(void)
+{
+	gchar *file;
+	gboolean ok;
+
+	keyfile = g_key_file_new();
+
+	file = g_build_filename(g_get_home_dir(), ".osso",
+				"scrobbler", NULL);
+
+	ok = g_key_file_load_from_file(keyfile, file, G_KEY_FILE_NONE, NULL);
+	if (!ok)
+		goto leave;
+
+	g_free(file);
+
+	lastfm = get_session(SR_LASTFM_URL, "lastfm");
+	librefm = get_session(SR_LIBREFM_URL, "librefm");
+	if (!lastfm && !librefm)
+		goto leave;
+
+leave:
+	g_key_file_free(keyfile);
+	return ok;
+}
+
 int main(void)
 {
 	GError *error = NULL;
 	MafwRegistry *registry;
-	gchar *file;
-	gboolean ok;
 
 	g_type_init();
 	if (!g_thread_supported())
@@ -173,23 +198,8 @@ int main(void)
 			 "renderer-added",
 			 G_CALLBACK(renderer_added_cb), NULL);
 
-	keyfile = g_key_file_new();
-
-	file = g_build_filename(g_get_home_dir(), ".osso",
-				"scrobbler", NULL);
-
-	ok = g_key_file_load_from_file(keyfile, file, G_KEY_FILE_NONE, NULL);
-	if (!ok)
-		goto err;
-
-	g_free(file);
-
-	lastfm = get_session(SR_LASTFM_URL, "lastfm");
-	librefm = get_session(SR_LIBREFM_URL, "librefm");
-	if (!lastfm && !librefm)
-		goto err;
-
-	g_key_file_free(keyfile);
+	if (!authenticate())
+		return -1;
 
 	track = sr_track_new();
 	track->source = 'P';
@@ -202,8 +212,4 @@ int main(void)
 	sr_session_free(lastfm);
 	sr_session_free(librefm);
 	return 0;
-
-err:
-	g_key_file_free(keyfile);
-	return -1;
 }
