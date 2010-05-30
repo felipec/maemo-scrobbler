@@ -445,6 +445,9 @@ drop_submitted(sr_session_t *s)
 			break;
 	}
 	g_mutex_unlock(priv->queue_mutex);
+
+	if (s->scrobble_cb)
+		s->scrobble_cb(s);
 }
 
 static inline void

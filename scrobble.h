@@ -30,6 +30,7 @@ struct sr_session {
 	void *priv;
 	void *user_data;
 	void (*error_cb) (sr_session_t *s, int fatal, const char *msg);
+	void (*scrobble_cb) (sr_session_t *s);
 };
 
 sr_session_t *sr_session_new(const char *url,
