@@ -140,19 +140,18 @@ leave:
 	return ok;
 }
 
-static sr_session_t *
-get_session(const char *url,
-	    const char *id)
+static void
+get_session(struct service *service)
 {
 	sr_session_t *s;
-	s = sr_session_new(url, "tst", "1.0");
+	s = sr_session_new(service->url, "tst", "1.0");
 	s->error_cb = error_cb;
-	if (!load_cred(s, id)) {
+	if (!load_cred(s, service->id)) {
 		sr_session_free(s);
-		return NULL;
+		return;
 	}
 	sr_session_handshake(s);
-	return s;
+	service->session = s;
 }
 
 static gboolean
@@ -172,10 +171,8 @@ authenticate(void)
 
 	g_free(file);
 
-	for (i = 0; i < G_N_ELEMENTS(services); i++) {
-		struct service *s = &services[i];
-		s->session = get_session(s->url, s->id);
-	}
+	for (i = 0; i < G_N_ELEMENTS(services); i++)
+		get_session(&services[i]);
 	if (!services[0].session && !services[1].session)
 		goto leave;
 
