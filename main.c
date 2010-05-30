@@ -166,6 +166,7 @@ get_session(struct service *service)
 {
 	sr_session_t *s;
 	s = sr_session_new(service->url, "tst", "1.0");
+	s->user_data = service;
 	s->error_cb = error_cb;
 	service->cache = g_build_filename(cache_dir, service->id, NULL);
 	sr_session_load_list(s, service->cache);
