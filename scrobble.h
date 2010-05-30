@@ -28,6 +28,7 @@ typedef struct sr_session sr_session_t;
 
 struct sr_session {
 	void *priv;
+	void *user_data;
 	void (*error_cb) (sr_session_t *s, int fatal, const char *msg);
 };
 
