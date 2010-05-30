@@ -180,12 +180,16 @@ int main(void)
 
 	ok = g_key_file_load_from_file(keyfile, file, G_KEY_FILE_NONE, NULL);
 	if (!ok)
-		goto leave;
+		goto err;
+
+	g_free(file);
 
 	lastfm = get_session(SR_LASTFM_URL, "lastfm");
 	librefm = get_session(SR_LIBREFM_URL, "librefm");
 	if (!lastfm && !librefm)
-		goto leave;
+		goto err;
+
+	g_key_file_free(keyfile);
 
 	track = sr_track_new();
 	track->source = 'P';
@@ -193,11 +197,13 @@ int main(void)
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
 
-leave:
 	sr_track_free(track);
 
 	sr_session_free(lastfm);
 	sr_session_free(librefm);
-	g_key_file_free(keyfile);
 	return 0;
+
+err:
+	g_key_file_free(keyfile);
+	return -1;
 }
