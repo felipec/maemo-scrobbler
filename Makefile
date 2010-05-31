@@ -10,13 +10,13 @@ GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)
 GLIB_LIBS := $(shell pkg-config --libs glib-2.0)
 
 SOUP_CFLAGS := $(shell pkg-config --cflags libsoup-2.4)
-SOUP_LIBS := $(shell pkg-config --libs libsoup-2.4)
+SOUP_LIBS := -lsoup-2.4 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 
 GTHREAD_CFLAGS := $(shell pkg-config --cflags gthread-2.0)
-GTHREAD_LIBS := $(shell pkg-config --libs gthread-2.0)
+GTHREAD_LIBS := -lgthread-2.0 -lglib-2.0
 
 MAFW_CFLAGS := $(shell pkg-config --cflags mafw-shared mafw)
-MAFW_LIBS := $(shell pkg-config --libs mafw-shared mafw)
+MAFW_LIBS := -lmafw-shared -lmafw -lgobject-2.0 -lglib-2.0
 
 HILDON_CFLAGS := $(shell pkg-config --cflags hildon-1 hildon-control-panel libosso)
 HILDON_LIBS := -lhildon-1 -lgtk-x11-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
