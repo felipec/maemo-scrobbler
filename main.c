@@ -4,7 +4,7 @@
 #include <gio/gio.h>
 
 #include <string.h>
-#include <stignal.h>
+#include <signal.h>
 
 #include "scrobble.h"
 
