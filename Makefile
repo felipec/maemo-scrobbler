@@ -18,11 +18,8 @@ GTHREAD_LIBS := $(shell pkg-config --libs gthread-2.0)
 MAFW_CFLAGS := $(shell pkg-config --cflags mafw-shared mafw)
 MAFW_LIBS := $(shell pkg-config --libs mafw-shared mafw)
 
-HILDON_CFLAGS := $(shell pkg-config --cflags hildon-1 hildon-control-panel)
-HILDON_LIBS := $(shell pkg-config --libs hildon-1 hildon-control-panel)
-
-OSSO_CFLAGS := $(shell pkg-config --cflags libosso)
-OSSO_LIBS := $(shell pkg-config --libs libosso)
+HILDON_CFLAGS := $(shell pkg-config --cflags hildon-1 hildon-control-panel libosso)
+HILDON_LIBS := -lhildon-1 -lgtk-x11-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 
 SCROBBLE_LIBS := $(SOUP_LIBS)
 
@@ -37,8 +34,8 @@ maemo-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(SC
 bins += maemo-scrobbler
 
 libcp-scrobbler.so: control_panel.o
-libcp-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS) $(OSSO_CFLAGS)
-libcp-scrobbler.so: override LIBS += $(HILDON_LIBS) $(OSSO_LIBS)
+libcp-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS)
+libcp-scrobbler.so: override LIBS += $(HILDON_LIBS)
 libs += libcp-scrobbler.so
 
 all: libscrobble.a $(bins) $(libs)
