@@ -1,4 +1,3 @@
 #!/bin/sh
 dsmetool -U user -f /usr/bin/maemo-scrobbler
-#DEBHELPER#
 exit 0

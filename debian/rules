@@ -20,7 +20,8 @@ install:
 binary-arch: build install
 	dh_testdir
 	dh_testroot
-	dh_installxsession -u 'post 85'
+	install -m 755 -D debian/maemo-scrobbler.xsession \
+		debian/maemo-scrobbler/etc/X11/Xsession.post/85maemo-scrobbler
 	dh_install --sourcedir=debian/tmp
 	dh_strip --dbg-package=maemo-scrobbler-dbg
 	dh_compress
