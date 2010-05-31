@@ -1,3 +1,9 @@
+maemo-scrobbler (1.0-4) fremantle; urgency=low
+
+  * Trivial improvements
+
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Mon, 31 May 2010 07:00:03 +0300
+
 maemo-scrobbler (1.0-3) fremantle; urgency=low
 
   * Fix boot
