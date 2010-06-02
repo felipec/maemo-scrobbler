@@ -1,3 +1,9 @@
+maemo-scrobbler (1.0-7) fremantle; urgency=high
+
+  * Update to use real client id
+
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Thu, 03 Jun 2010 01:56:02 +0300
+
 maemo-scrobbler (1.0-6) fremantle; urgency=low
 
   * Improve deinstallation
