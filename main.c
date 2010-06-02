@@ -178,7 +178,7 @@ static void
 get_session(struct service *service)
 {
 	sr_session_t *s;
-	s = sr_session_new(service->url, "tst", "1.0");
+	s = sr_session_new(service->url, "mms", "1.0");
 	s->user_data = service;
 	s->error_cb = error_cb;
 	s->scrobble_cb = scrobble_cb;
