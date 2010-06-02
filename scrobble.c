@@ -460,7 +460,10 @@ drop_submitted(sr_session_t *s)
 	}
 	g_mutex_unlock(priv->queue_mutex);
 
-	if (s->scrobble_cb)
+	if (!g_queue_is_empty(priv->queue))
+		/* still need to submit more */
+		sr_session_submit(s);
+	else if (s->scrobble_cb)
 		s->scrobble_cb(s);
 }
 
