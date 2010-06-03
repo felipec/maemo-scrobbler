@@ -1,3 +1,10 @@
+maemo-scrobbler (1.0-8) fremantle; urgency=low
+
+  * Fix inst/deinst scripts; the process was not launched at installation.
+  * Trivial improvment when the song queued are more than 50
+
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Fri, 04 Jun 2010 01:01:24 +0300
+
 maemo-scrobbler (1.0-7) fremantle; urgency=high
 
   * Update to use real client id
