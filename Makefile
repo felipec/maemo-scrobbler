@@ -21,6 +21,9 @@ MAFW_LIBS := -lmafw-shared -lmafw -lgobject-2.0 -lglib-2.0
 HILDON_CFLAGS := $(shell pkg-config --cflags hildon-1 hildon-control-panel libosso)
 HILDON_LIBS := -lhildon-1 -lgtk-x11-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 
+CONIC_CFLAGS := $(shell pkg-config --cflags conic)
+CONIC_LIBS := -lconic
+
 SCROBBLE_LIBS := $(SOUP_LIBS)
 
 all:
@@ -29,8 +32,8 @@ libscrobble.a: scrobble.o
 libscrobble.a: override CFLAGS += $(GLIB_CFLAGS) $(SOUP_CFLAGS)
 
 maemo-scrobbler: main.o libscrobble.a
-maemo-scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS)
-maemo-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(SCROBBLE_LIBS)
+maemo-scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS) $(CONIC_CFLAGS)
+maemo-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(CONIC_LIBS) $(SCROBBLE_LIBS)
 bins += maemo-scrobbler
 
 libcp-scrobbler.so: control_panel.o
