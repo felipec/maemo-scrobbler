@@ -2,6 +2,9 @@
 #include <libmafw/mafw.h>
 #include <libmafw-shared/mafw-shared.h>
 #include <gio/gio.h>
+#include <conic.h>
+#include <dbus/dbus.h>
+#include <dbus/dbus-glib-lowlevel.h>
 
 #include <string.h>
 #include <signal.h>
@@ -14,6 +17,7 @@ static sr_track_t *track;
 static char *conf_file;
 static char *cache_dir;
 static int skip_track;
+static int connected;
 
 struct service {
 	const char *id;
@@ -165,7 +169,8 @@ authenticate_session(struct service *s)
 		goto leave;
 
 	sr_session_set_cred(s->session, username, password);
-	sr_session_handshake(s->session);
+	if (connected)
+		sr_session_handshake(s->session);
 
 leave:
 	g_free(username);
@@ -246,11 +251,51 @@ signal_handler(int signal)
 	g_main_loop_quit(main_loop);
 }
 
+static void
+check_proxy(ConIcConnection *connection)
+{
+	const char *host;
+	int port;
+	char *url;
+	unsigned i;
+
+	if (con_ic_connection_get_proxy_mode(connection) == CON_IC_PROXY_MODE_MANUAL) {
+		host = con_ic_connection_get_proxy_host(connection, CON_IC_PROXY_PROTOCOL_HTTP);
+		port = con_ic_connection_get_proxy_port(connection, CON_IC_PROXY_PROTOCOL_HTTP);
+		url = g_strdup_printf("http://%s:%i/", host, port);
+	}
+	else
+		url = NULL;
+	for (i = 0; i < G_N_ELEMENTS(services); i++)
+		sr_session_set_proxy(services[i].session, url);
+	g_free(url);
+}
+
+static void
+connection_event(ConIcConnection *connection,
+		 ConIcConnectionEvent *event,
+		 gpointer user_data)
+{
+	ConIcConnectionStatus status;
+	status = con_ic_connection_event_get_status(event);
+	if (status == CON_IC_STATUS_CONNECTED) {
+		unsigned i;
+		connected = 1;
+		check_proxy(connection);
+		for (i = 0; i < G_N_ELEMENTS(services); i++)
+			sr_session_handshake(services[i].session);
+	}
+	else if (status == CON_IC_STATUS_DISCONNECTING)
+		connected = 0;
+}
+
 int main(void)
 {
 	GError *error = NULL;
 	MafwRegistry *registry;
 	unsigned i;
+	DBusConnection *dbus_system;
+	ConIcConnection *connection;
 
 	g_type_init();
 	if (!g_thread_supported())
@@ -279,6 +324,12 @@ int main(void)
 			 "renderer-added",
 			 G_CALLBACK(renderer_added_cb), NULL);
 
+	dbus_system = dbus_bus_get(DBUS_BUS_SYSTEM, NULL);
+	dbus_connection_setup_with_g_main(dbus_system, NULL);
+	connection = con_ic_connection_new();
+	g_signal_connect(connection, "connection-event", G_CALLBACK(connection_event), NULL);
+	g_object_set(connection, "automatic-connection-events", TRUE, NULL);
+
 	track = sr_track_new();
 	track->source = 'P';
 
@@ -288,6 +339,11 @@ int main(void)
 
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
+
+	g_object_unref(connection);
+	dbus_connection_unref(dbus_system);
+
+	g_main_loop_unref(main_loop);
 
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];

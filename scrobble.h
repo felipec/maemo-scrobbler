@@ -52,5 +52,6 @@ sr_track_t *sr_track_dup(sr_track_t *in);
 
 void sr_session_handshake(sr_session_t *s);
 void sr_session_submit(sr_session_t *s);
+void sr_session_set_proxy(sr_session_t *s, const char *url);
 
 #endif /* SCROBBLE_H */
