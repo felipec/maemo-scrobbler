@@ -252,6 +252,26 @@ signal_handler(int signal)
 }
 
 static void
+check_proxy(ConIcConnection *connection)
+{
+	const char *host;
+	int port;
+	char *url;
+	unsigned i;
+
+	if (con_ic_connection_get_proxy_mode(connection) == CON_IC_PROXY_MODE_MANUAL) {
+		host = con_ic_connection_get_proxy_host(connection, CON_IC_PROXY_PROTOCOL_HTTP);
+		port = con_ic_connection_get_proxy_port(connection, CON_IC_PROXY_PROTOCOL_HTTP);
+		url = g_strdup_printf("http://%s:%i/", host, port);
+	}
+	else
+		url = NULL;
+	for (i = 0; i < G_N_ELEMENTS(services); i++)
+		sr_session_set_proxy(services[i].session, url);
+	g_free(url);
+}
+
+static void
 connection_event(ConIcConnection *connection,
 		 ConIcConnectionEvent *event,
 		 gpointer user_data)
@@ -261,6 +281,7 @@ connection_event(ConIcConnection *connection,
 	if (status == CON_IC_STATUS_CONNECTED) {
 		unsigned i;
 		connected = 1;
+		check_proxy(connection);
 		for (i = 0; i < G_N_ELEMENTS(services); i++)
 			sr_session_handshake(services[i].session);
 	}
