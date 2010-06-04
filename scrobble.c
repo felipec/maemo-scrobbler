@@ -29,7 +29,10 @@ struct sr_session_priv {
 	int hard_failure_count;
 	int submit_count;
 	sr_track_t *last_track;
+	int np_timer;
 };
+
+static void now_playing(sr_session_t *s, sr_track_t *t);
 
 sr_session_t *
 sr_session_new(const char *url,
@@ -59,6 +62,9 @@ sr_session_free(sr_session_t *s)
 		return;
 
 	priv = s->priv;
+
+	if (priv->np_timer)
+		g_source_remove(priv->np_timer);
 
 	soup_session_abort(priv->soup);
 	g_object_unref(priv->soup);
@@ -167,11 +173,26 @@ sr_session_pause(sr_session_t *s)
 	g_mutex_unlock(priv->queue_mutex);
 }
 
+static gboolean
+do_now_playing(void *data)
+{
+	sr_session_t *s = data;
+	struct sr_session_priv *priv = s->priv;
+	priv->np_timer = 0;
+	now_playing(s, priv->last_track);
+	return FALSE;
+}
+
 void
 sr_session_add_track(sr_session_t *s,
 		     sr_track_t *t)
 {
 	struct sr_session_priv *priv = s->priv;
+
+	if (priv->np_timer)
+		g_source_remove(priv->np_timer);
+
+	priv->np_timer = g_timeout_add_seconds(3, do_now_playing, s);
 
 	g_mutex_lock(priv->queue_mutex);
 	check_last(s, t->timestamp);
@@ -587,6 +608,87 @@ sr_session_submit(sr_session_t *s)
 	soup_session_queue_message(priv->soup,
 				   message,
 				   scrobble_cb,
+				   s);
+	g_string_free(data, false); /* soup gets ownership */
+}
+
+static void
+now_playing_cb(SoupSession *session,
+	       SoupMessage *message,
+	       gpointer user_data)
+{
+	sr_session_t *s = user_data;
+	const char *data, *end;
+
+	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code))
+		/* now need to do anything drastic, right? */
+		return;
+
+	data = message->response_body->data;
+	end = strchr(data, '\n');
+	if (!end) /* really bad */
+		return;
+
+	if (strncmp(data, "BADSESSION", end - data) == 0)
+		invalidate_session(s);
+}
+
+#undef ADD_FIELD
+#define ADD_FIELD(id, fmt, field) \
+	do { \
+		if ((field)) \
+		g_string_append_printf(data, "&" id "=%" fmt, (field)); \
+		else \
+		g_string_append_printf(data, "&" id "="); \
+	} while(0);
+
+static void
+now_playing(sr_session_t *s,
+	    sr_track_t *t)
+{
+	struct sr_session_priv *priv = s->priv;
+	SoupMessage *message;
+	GString *data;
+	char *artist, *title;
+	char *album = NULL, *mbid = NULL;
+
+	/* haven't got the session yet? */
+	if (!priv->session_id)
+		return;
+
+	data = g_string_new(NULL);
+	g_string_append_printf(data, "s=%s", priv->session_id);
+
+	artist = soup_uri_encode(t->artist, EXTRA_URI_ENCODE_CHARS);
+	title = soup_uri_encode(t->title, EXTRA_URI_ENCODE_CHARS);
+	if (t->album)
+		album = soup_uri_encode(t->album, EXTRA_URI_ENCODE_CHARS);
+	if (t->mbid)
+		mbid = soup_uri_encode(t->mbid, EXTRA_URI_ENCODE_CHARS);
+
+	/* required fields */
+	g_string_append_printf(data, "&a=%s&t=%s", artist, title);
+
+	/* optional fields */
+	ADD_FIELD("b", "s", album);
+	ADD_FIELD("l", "i", t->length);
+	ADD_FIELD("n", "i", t->position);
+	ADD_FIELD("m", "s", mbid);
+
+	g_free(artist);
+	g_free(title);
+	g_free(album);
+	g_free(mbid);
+
+	message = soup_message_new("POST", priv->now_playing_url);
+	soup_message_set_request(message,
+				 "application/x-www-form-urlencoded",
+				 SOUP_MEMORY_TAKE,
+				 data->str,
+				 data->len);
+	soup_session_queue_message(priv->soup,
+				   message,
+				   now_playing_cb,
 				   s);
 	g_string_free(data, false); /* soup gets ownership */
 }
