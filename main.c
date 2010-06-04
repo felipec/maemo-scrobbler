@@ -322,6 +322,8 @@ int main(void)
 	g_object_unref(connection);
 	dbus_connection_unref(dbus_system);
 
+	g_main_loop_unref(main_loop);
+
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
 		sr_session_pause(s->session);
