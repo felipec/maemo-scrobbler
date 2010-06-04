@@ -254,12 +254,12 @@ signal_handler(int signal)
 static void
 check_proxy(ConIcConnection *connection)
 {
-	const char *host;
-	int port;
 	char *url;
 	unsigned i;
 
 	if (con_ic_connection_get_proxy_mode(connection) == CON_IC_PROXY_MODE_MANUAL) {
+		const char *host;
+		int port;
 		host = con_ic_connection_get_proxy_host(connection, CON_IC_PROXY_PROTOCOL_HTTP);
 		port = con_ic_connection_get_proxy_port(connection, CON_IC_PROXY_PROTOCOL_HTTP);
 		url = g_strdup_printf("http://%s:%i/", host, port);
