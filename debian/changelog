@@ -4,7 +4,7 @@ maemo-scrobbler (1.1-1) fremantle; urgency=low
   * Add support for Now-Playing
   * Add proxy support
 
- -- Felipe Contreras <felipe.contreras@gmail.com>  Fri, 04 Jun 2010 05:06:31 +0300
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Fri, 04 Jun 2010 05:20:34 +0300
 
 maemo-scrobbler (1.0-8) fremantle; urgency=low
 
