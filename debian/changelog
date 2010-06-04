@@ -1,3 +1,11 @@
+maemo-scrobbler (1.1-1) fremantle; urgency=low
+
+  * Add support to detect network connections
+  * Add support for Now-Playing
+  * Add proxy support
+
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Fri, 04 Jun 2010 05:06:31 +0300
+
 maemo-scrobbler (1.0-8) fremantle; urgency=low
 
   * Fix inst/deinst scripts; the process was not launched at installation.
