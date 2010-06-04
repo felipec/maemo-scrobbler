@@ -692,3 +692,15 @@ now_playing(sr_session_t *s,
 				   s);
 	g_string_free(data, false); /* soup gets ownership */
 }
+
+void
+sr_session_set_proxy(sr_session_t *s, const char *url)
+{
+	struct sr_session_priv *priv = s->priv;
+	SoupURI *soup_uri;
+	if (url)
+		soup_uri = soup_uri_new(url);
+	else
+		soup_uri = NULL;
+	g_object_set(priv->soup, "proxy-uri", soup_uri, NULL);
+}
