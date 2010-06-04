@@ -151,7 +151,7 @@ check_last(sr_session_t *s,
 		return;
 	playtime = timestamp - c->timestamp;
 	/* did the last track played long enough? */
-	if (playtime >= 240 || playtime >= c->length / 2)
+	if ((playtime >= 240 || playtime >= c->length / 2) && c->length > 30)
 		g_queue_push_tail(priv->queue, c);
 	else
 		sr_track_free(c);
@@ -175,10 +175,7 @@ sr_session_add_track(sr_session_t *s,
 
 	g_mutex_lock(priv->queue_mutex);
 	check_last(s, t->timestamp);
-	if (t->length > 30)
-		priv->last_track = t;
-	else
-		sr_track_free(t);
+	priv->last_track = t;
 	g_mutex_unlock(priv->queue_mutex);
 }
 
