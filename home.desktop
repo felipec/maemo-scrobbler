@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=Scrobbler
+Comment=Home widget for music scrobbler
+Type=default
+X-Path=libhome-scrobbler.so

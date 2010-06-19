@@ -19,7 +19,7 @@ GTHREAD_LIBS := -lgthread-2.0 -lglib-2.0
 MAFW_CFLAGS := $(shell pkg-config --cflags mafw-shared mafw)
 MAFW_LIBS := -lmafw-shared -lmafw -lgobject-2.0 -lglib-2.0
 
-HILDON_CFLAGS := $(shell pkg-config --cflags hildon-1 hildon-control-panel libosso)
+HILDON_CFLAGS := $(shell pkg-config --cflags hildon-1 libhildondesktop-1 hildon-control-panel libosso)
 HILDON_LIBS := -lhildon-1 -lgtk-x11-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 
 CONIC_CFLAGS := $(shell pkg-config --cflags conic)
@@ -42,6 +42,11 @@ libcp-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS)
 libcp-scrobbler.so: override LIBS += $(HILDON_LIBS)
 libs += libcp-scrobbler.so
 
+libhome-scrobbler.so: widget.o
+libhome-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS)
+libhome-scrobbler.so: override LIBS += $(HILDON_LIBS) -lhildondesktop-1
+libs += libhome-scrobbler.so
+
 all: libscrobble.a $(bins) $(libs)
 
 D = $(DESTDIR)
@@ -60,6 +65,11 @@ install: $(bins) $(libs)
 	install -m 644 cp.desktop -D \
 		$(D)/usr/share/applications/hildon-control-panel/scrobbler.desktop
 	install -m 644 fm.png -D $(D)/usr/share/icons/hicolor/48x48/apps/fm.png
+	install -m 644 libhome-scrobbler.so -D \
+		$(D)/usr/lib/hildon-desktop/libhome-scrobbler.so
+	install -m 644 home.desktop -D \
+		$(D)/usr/share/applications/hildon-home/scrobbler.desktop
+	install -m 644 love.png -D $(D)/usr/share/scrobbler/love.png
 
 %.a::
 	$(QUIET_LINK)$(AR) rcs $@ $^
