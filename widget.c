@@ -48,10 +48,72 @@ instance_init(GTypeInstance *instance,
 static void *parent_class;
 
 static void
+realize(GtkWidget *widget)
+{
+	GdkScreen *screen = gtk_widget_get_screen(widget);
+	gtk_widget_set_colormap(widget, gdk_screen_get_rgba_colormap(screen));
+	gtk_widget_set_app_paintable(widget, TRUE);
+	GTK_WIDGET_CLASS(parent_class)->realize(widget);
+}
+
+static gboolean
+expose_event(GtkWidget *widget,
+	     GdkEventExpose *event)
+{
+	cairo_t *cr;
+	GdkColor color;
+
+	cr = gdk_cairo_create(GDK_DRAWABLE(widget->window));
+	gdk_cairo_region(cr, event->region);
+	cairo_clip(cr);
+
+	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.0);
+	cairo_paint(cr);
+
+	if (!loved) {
+		gtk_style_lookup_color(gtk_rc_get_style(widget), "DefaultBackgroundColor", &color);
+		cairo_set_source_rgba(cr, color.red / 65535.0, color.green / 65335.0, color.blue / 65535.0, 0.75);
+	}
+	else {
+		gtk_style_lookup_color(gtk_rc_get_style(widget), "SelectionColor", &color);
+		cairo_set_source_rgba(cr, color.red / 65535.0, color.green/ 65335.0, color.blue / 65535.0, 0.75);
+	}
+
+	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+	double x = 0.0,
+	       y = 0.0,
+	       width = 96,
+	       height = 96;
+	double radius = 4.0;
+	double degrees = M_PI / 180.0;
+
+	cairo_new_sub_path(cr);
+	cairo_arc(cr, x + width - radius, y + radius, radius, -90 * degrees, 0 * degrees);
+	cairo_arc(cr, x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees);
+	cairo_arc(cr, x + radius, y + height - radius, radius, 90 * degrees, 180 * degrees);
+	cairo_arc(cr, x + radius, y + radius, radius, 180 * degrees, 270 * degrees);
+	cairo_close_path(cr);
+
+	cairo_fill_preserve(cr);
+
+	cairo_destroy(cr);
+
+	return GTK_WIDGET_CLASS(parent_class)->expose_event(widget, event);
+}
+
+static void
 class_init(void *g_class,
 	   void *class_data)
 {
+	GtkWidgetClass *widget_class;
+
 	parent_class = g_type_class_peek_parent(g_class);
+
+	widget_class = GTK_WIDGET_CLASS(g_class);
+
+	widget_class->realize = realize;
+	widget_class->expose_event = expose_event;
 }
 
 GType

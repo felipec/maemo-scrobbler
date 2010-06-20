@@ -44,7 +44,7 @@ libs += libcp-scrobbler.so
 
 libhome-scrobbler.so: widget.o
 libhome-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS)
-libhome-scrobbler.so: override LIBS += $(HILDON_LIBS) -lhildondesktop-1
+libhome-scrobbler.so: override LIBS += $(HILDON_LIBS) -lhildondesktop-1 -lcairo -lgdk-x11-2.0
 libs += libhome-scrobbler.so
 
 all: libscrobble.a $(bins) $(libs)
