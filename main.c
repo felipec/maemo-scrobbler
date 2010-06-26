@@ -45,6 +45,15 @@ static struct service services[] = {
 		.api_secret = "92cb9a26e36b18031e5dad8db4edfddb", },
 };
 
+void scrobbler_love(gboolean on)
+{
+	unsigned i;
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_set_love(s->session, on);
+	}
+}
+
 static void
 metadata_callback(MafwRenderer *self,
 		  const gchar *object_id,

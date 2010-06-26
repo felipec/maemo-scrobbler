@@ -3,6 +3,15 @@
 
 static void *parent_class;
 
+extern void scrobbler_love(gboolean on);
+
+static gboolean
+sr_service_love(struct sr_service *service, gboolean on)
+{
+	scrobbler_love(on);
+	return TRUE;
+}
+
 #include "service_glue.h"
 
 static void

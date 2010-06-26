@@ -15,6 +15,9 @@ love_cb(GtkWidget *widget,
 	struct sr_widget *self = user_data;
 	loved = ~loved;
 	gtk_widget_queue_draw(GTK_WIDGET(self));
+	dbus_g_proxy_call(sr_service, "Love", NULL,
+			  G_TYPE_BOOLEAN, loved, G_TYPE_INVALID,
+			  G_TYPE_INVALID);
 	return TRUE;
 }
 
