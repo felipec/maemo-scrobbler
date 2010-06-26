@@ -5,6 +5,7 @@
 
 static GType type_id;
 static int loved;
+static DBusGProxy *sr_service;
 
 gboolean
 love_cb(GtkWidget *widget,
@@ -107,13 +108,27 @@ class_init(void *g_class,
 	   void *class_data)
 {
 	GtkWidgetClass *widget_class;
+	DBusGConnection *bus;
 
 	parent_class = g_type_class_peek_parent(g_class);
-
 	widget_class = GTK_WIDGET_CLASS(g_class);
 
 	widget_class->realize = realize;
 	widget_class->expose_event = expose_event;
+
+	bus = dbus_g_bus_get(DBUS_BUS_SESSION, NULL);
+	sr_service = dbus_g_proxy_new_for_name(bus,
+					       "org.scrobbler.service",
+					       "/org/scrobbler/service",
+					       "org.scrobbler.service");
+	dbus_g_connection_unref(bus);
+}
+
+static void
+class_finalize(void *g_class,
+	       void *class_data)
+{
+	g_object_unref(sr_service);
 }
 
 GType
@@ -128,6 +143,7 @@ register_type(GTypeModule *type_module)
 	GTypeInfo type_info = {
 		.class_size = sizeof(struct sr_widget_class),
 		.class_init = class_init,
+		.class_finalize = class_finalize,
 		.instance_size = sizeof(struct sr_widget),
 		.instance_init = instance_init,
 	};

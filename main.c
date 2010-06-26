@@ -10,6 +10,7 @@
 #include <signal.h>
 
 #include "scrobble.h"
+#include "service.h"
 
 static GMainLoop *main_loop;
 static GKeyFile *keyfile;
@@ -18,6 +19,8 @@ static char *conf_file;
 static char *cache_dir;
 static int skip_track;
 static int connected;
+
+static struct sr_service *dbus_service;
 
 struct service {
 	const char *id;
@@ -355,6 +358,8 @@ int main(void)
 	g_signal_connect(connection, "connection-event", G_CALLBACK(connection_event), NULL);
 	g_object_set(connection, "automatic-connection-events", TRUE, NULL);
 
+	dbus_service = g_object_new(SR_SERVICE_TYPE, NULL);
+
 	track = sr_track_new();
 	track->source = 'P';
 
@@ -365,6 +370,7 @@ int main(void)
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
 
+	g_object_unref(dbus_service);
 	g_object_unref(connection);
 	dbus_connection_unref(dbus_system);
 

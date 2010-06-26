@@ -25,6 +25,8 @@ HILDON_LIBS := -lhildon-1 -lgtk-x11-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
 CONIC_CFLAGS := $(shell pkg-config --cflags conic)
 CONIC_LIBS := -lconic
 
+DBUS_LIBS := -ldbus-glib-1
+
 SCROBBLE_LIBS := $(SOUP_LIBS)
 
 all:
@@ -32,9 +34,9 @@ all:
 libscrobble.a: scrobble.o
 libscrobble.a: override CFLAGS += $(GLIB_CFLAGS) $(SOUP_CFLAGS)
 
-scrobbler: main.o libscrobble.a
+scrobbler: main.o libscrobble.a service.o
 scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS) $(CONIC_CFLAGS)
-scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(CONIC_LIBS) $(SCROBBLE_LIBS)
+scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(CONIC_LIBS) $(SCROBBLE_LIBS) $(DBUS_LIBS)
 bins += scrobbler
 
 libcp-scrobbler.so: control_panel.o
@@ -44,7 +46,7 @@ libs += libcp-scrobbler.so
 
 libhome-scrobbler.so: widget.o
 libhome-scrobbler.so: override CFLAGS += $(HILDON_CFLAGS)
-libhome-scrobbler.so: override LIBS += $(HILDON_LIBS) -lhildondesktop-1 -lcairo -lgdk-x11-2.0
+libhome-scrobbler.so: override LIBS += $(HILDON_LIBS) $(DBUS_LIBS) -lhildondesktop-1 -lcairo -lgdk-x11-2.0
 libs += libhome-scrobbler.so
 
 all: libscrobble.a $(bins) $(libs)
@@ -57,6 +59,11 @@ QUIET_CC    = @echo '   CC         '$@;
 QUIET_LINK  = @echo '   LINK       '$@;
 QUIET_CLEAN = @echo '   CLEAN      '$@;
 endif
+
+service_glue.h: service.xml
+	dbus-binding-tool --prefix=sr_service --mode=glib-server $< > $@
+
+service.o: | service_glue.h
 
 install: $(bins) $(libs)
 	install -m 755 scrobbler -D $(D)/usr/bin/scrobbler
