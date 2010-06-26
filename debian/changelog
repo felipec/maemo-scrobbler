@@ -1,3 +1,10 @@
+maemo-scrobbler (1.1-2) fremantle; urgency=low
+
+  * Add home desktop widget
+  * Add support for 'love'
+
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Sat, 26 Jun 2010 15:24:58 +0300
+
 maemo-scrobbler (1.1-1) fremantle; urgency=low
 
   * Add support to detect network connections
