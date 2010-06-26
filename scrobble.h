@@ -62,5 +62,6 @@ void sr_session_set_api(sr_session_t *s,
 			const char *api_key,
 			const char *api_secret);
 void sr_session_set_session_key(sr_session_t *s, const char *session_key);
+void sr_session_set_love(sr_session_t *s, int on);
 
 #endif /* SCROBBLE_H */

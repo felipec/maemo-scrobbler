@@ -37,10 +37,14 @@ struct sr_session_priv {
 	char *api_key;
 	char *api_secret;
 	char *session_key;
+	GQueue *love_queue;
+	GMutex *love_queue_mutex;
+	bool api_problems;
 };
 
 static void now_playing(sr_session_t *s, sr_track_t *t);
 static void ws_auth(sr_session_t *s);
+static void ws_love(sr_session_t *s);
 
 sr_session_t *
 sr_session_new(const char *url,
@@ -58,6 +62,8 @@ sr_session_new(const char *url,
 	priv->client_ver = g_strdup(client_ver);
 	priv->soup = soup_session_async_new();
 	priv->handshake_delay = 1;
+	priv->love_queue = g_queue_new();
+	priv->love_queue_mutex = g_mutex_new();
 	return s;
 }
 
@@ -70,6 +76,14 @@ sr_session_free(sr_session_t *s)
 		return;
 
 	priv = s->priv;
+
+	while (!g_queue_is_empty(priv->love_queue)) {
+		sr_track_t *t;
+		t = g_queue_pop_head(priv->love_queue);
+		sr_track_free(t);
+	}
+	g_queue_free(priv->love_queue);
+	g_mutex_free(priv->love_queue_mutex);
 
 	g_free(priv->api_url);
 	g_free(priv->api_key);
@@ -168,6 +182,15 @@ check_last(sr_session_t *s,
 	c = priv->last_track;
 	if (!c)
 		return;
+
+	if (c->rating == 'L' && priv->session_key) {
+		g_mutex_lock(priv->love_queue_mutex);
+		g_queue_push_tail(priv->love_queue, sr_track_dup(c));
+		g_mutex_unlock(priv->love_queue_mutex);
+		if (!priv->api_problems)
+			ws_love(s);
+	}
+
 	playtime = timestamp - c->timestamp;
 	/* did the last track played long enough? */
 	if ((playtime >= 240 || playtime >= c->length / 2) && c->length > 30)
@@ -477,6 +500,8 @@ sr_session_handshake(sr_session_t *s)
 	if (priv->api_key) {
 		if (!priv->session_key)
 			ws_auth(s);
+		else
+			ws_love(s);
 	}
 }
 
@@ -878,4 +903,77 @@ ws_auth(sr_session_t *s)
 
 	g_free(auth_url);
 	g_free(auth);
+}
+
+static void
+ws_love_cb(SoupSession *session,
+	   SoupMessage *message,
+	   void *user_data)
+{
+	sr_session_t *s = user_data;
+	struct sr_session_priv *priv = s->priv;
+	sr_track_t *t;
+
+	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code)) {
+		priv->api_problems = true;
+		return;
+	}
+
+	g_mutex_lock(priv->love_queue_mutex);
+	t = g_queue_pop_head(priv->love_queue);
+	g_mutex_unlock(priv->love_queue_mutex);
+	sr_track_free(t);
+
+	priv->api_problems = false;
+
+	if (!g_queue_is_empty(priv->love_queue))
+		/* still need to submit more */
+		ws_love(s);
+}
+
+static void
+ws_love(sr_session_t *s)
+{
+	struct sr_session_priv *priv = s->priv;
+	SoupMessage *message;
+	gchar *params;
+	sr_track_t *t;
+
+	g_mutex_lock(priv->love_queue_mutex);
+	t = g_queue_peek_head(priv->love_queue);
+	g_mutex_unlock(priv->love_queue_mutex);
+
+	if (!t)
+		return;
+
+	ws_params(s, &params,
+		  "method", "track.love",
+		  "api_key", priv->api_key,
+		  "sk", priv->session_key,
+		  "track", t->title,
+		  "artist", t->artist,
+		  NULL);
+
+	message = soup_message_new("POST", priv->api_url);
+	soup_message_set_request(message,
+				 "application/x-www-form-urlencoded",
+				 SOUP_MEMORY_TAKE,
+				 params,
+				 strlen(params));
+	soup_session_queue_message(priv->soup,
+				   message,
+				   ws_love_cb,
+				   s);
+}
+
+void
+sr_session_set_love(sr_session_t *s, int on)
+{
+	struct sr_session_priv *priv = s->priv;
+	sr_track_t *c;
+
+	c = priv->last_track;
+	if (!c)
+		return;
+	c->rating = on ? 'L' : '\0';
 }
