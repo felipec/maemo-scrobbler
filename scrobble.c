@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 #include <glib.h>
 #include <libsoup/soup.h>
@@ -30,9 +31,16 @@ struct sr_session_priv {
 	int submit_count;
 	sr_track_t *last_track;
 	int np_timer;
+
+	/* web-service */
+	char *api_url;
+	char *api_key;
+	char *api_secret;
+	char *session_key;
 };
 
 static void now_playing(sr_session_t *s, sr_track_t *t);
+static void ws_auth(sr_session_t *s);
 
 sr_session_t *
 sr_session_new(const char *url,
@@ -62,6 +70,11 @@ sr_session_free(sr_session_t *s)
 		return;
 
 	priv = s->priv;
+
+	g_free(priv->api_url);
+	g_free(priv->api_key);
+	g_free(priv->api_secret);
+	g_free(priv->session_key);
 
 	if (priv->np_timer)
 		g_source_remove(priv->np_timer);
@@ -460,6 +473,11 @@ sr_session_handshake(sr_session_t *s)
 
 	g_free(handshake_url);
 	g_free(auth);
+
+	if (priv->api_key) {
+		if (!priv->session_key)
+			ws_auth(s);
+	}
 }
 
 static void
@@ -703,4 +721,161 @@ sr_session_set_proxy(sr_session_t *s, const char *url)
 	else
 		soup_uri = NULL;
 	g_object_set(priv->soup, "proxy-uri", soup_uri, NULL);
+}
+
+/* web-service */
+
+void
+sr_session_set_session_key(sr_session_t *s,
+			   const char *session_key)
+{
+	struct sr_session_priv *priv = s->priv;
+	priv->session_key = g_strdup(session_key);
+}
+
+void
+sr_session_set_api(sr_session_t *s,
+		   const char *api_url,
+		   const char *api_key,
+		   const char *api_secret)
+{
+	struct sr_session_priv *priv = s->priv;
+	priv->api_url = g_strdup(api_url);
+	priv->api_key = g_strdup(api_key);
+	priv->api_secret = g_strdup(api_secret);
+}
+
+struct ws_param {
+	const char *key;
+	const char *value;
+};
+
+static struct ws_param *
+param_new(const char *key, const char *value)
+{
+	struct ws_param *p = malloc(sizeof(*p));
+	p->key = key;
+	p->value = value;
+	return p;
+}
+
+static int
+param_compare(struct ws_param *a, struct ws_param *b)
+{
+	return strcmp(a->key, b->key);
+}
+
+static void ws_params(sr_session_t *s, char **params, ...) __attribute__((sentinel));
+
+static void
+ws_params(sr_session_t *s, char **params, ...)
+{
+	struct sr_session_priv *priv = s->priv;
+	GList *l = NULL;
+	va_list args;
+	GString *params_str, *tmp;
+	gchar *api_sig;
+
+	if (!params)
+		return;
+
+	params_str = g_string_sized_new(0x100);
+
+	va_start(args, params);
+	do {
+		const char *key, *value;
+		key = va_arg(args, char *);
+		if (!key)
+			break;
+		value = va_arg(args, char *);
+		if (!value)
+			break;
+		l = g_list_prepend(l, param_new(key, value));
+		g_string_append_printf(params_str, "&%s=%s", key, value);
+	} while(true);
+	va_end(args);
+
+	l = g_list_sort(l, (GCompareFunc) param_compare);
+
+	tmp = g_string_sized_new(0x100);
+
+	GList *c;
+	for (c = l; c; c = c->next) {
+		struct ws_param *p = c->data;
+		g_string_append_printf(tmp, "%s%s", p->key, p->value);
+	}
+
+	g_string_append(tmp, priv->api_secret);
+
+	api_sig = g_compute_checksum_for_string(G_CHECKSUM_MD5, tmp->str, -1);
+
+	g_string_free(tmp, TRUE);
+	g_list_foreach(l, (GFunc) free, NULL);
+
+	g_string_append_printf(params_str, "&api_sig=%s", api_sig);
+	g_free(api_sig);
+
+	*params = params_str->str;
+	g_string_free(params_str, FALSE);
+}
+
+static void
+ws_auth_cb(SoupSession *session,
+	   SoupMessage *message,
+	   void *user_data)
+{
+	sr_session_t *s = user_data;
+	struct sr_session_priv *priv = s->priv;
+	const char *data, *begin, *end;
+
+	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code))
+		return;
+
+	data = message->response_body->data;
+
+	begin = strstr(data, "<key>") + 5;
+	if (!begin) /* really bad */
+		return;
+	end = strstr(begin, "</key>");
+	if (!end) /* really bad */
+		return;
+	priv->session_key = g_strndup(begin, end - begin);
+	if (s->session_key_cb)
+		s->session_key_cb(s, priv->session_key);
+}
+
+static void
+ws_auth(sr_session_t *s)
+{
+	struct sr_session_priv *priv = s->priv;
+	gchar *auth, *tmp;
+	gchar *auth_url;
+	SoupMessage *message;
+
+	gchar *params;
+
+	tmp = g_strdup_printf("%s%s", priv->user, priv->hash_pwd);
+	auth = g_compute_checksum_for_string(G_CHECKSUM_MD5, tmp, -1);
+	g_free(tmp);
+
+	ws_params(s, &params,
+		  "api_key", priv->api_key,
+		  "authToken", auth,
+		  "method", "auth.getMobileSession",
+		  "username", priv->user,
+		  NULL);
+
+	auth_url = g_strdup_printf("%s?%s",
+				   priv->api_url,
+				   params);
+	g_free(params);
+
+	message = soup_message_new("GET", auth_url);
+	soup_session_queue_message(priv->soup,
+				   message,
+				   ws_auth_cb,
+				   s);
+
+	g_free(auth_url);
+	g_free(auth);
 }
