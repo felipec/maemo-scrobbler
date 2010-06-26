@@ -90,7 +90,7 @@ expose_event(GtkWidget *widget,
 	}
 	else {
 		gtk_style_lookup_color(gtk_rc_get_style(widget), "SelectionColor", &color);
-		cairo_set_source_rgba(cr, color.red / 65535.0, color.green/ 65335.0, color.blue / 65535.0, 0.75);
+		cairo_set_source_rgba(cr, color.red / 65535.0, color.green / 65335.0, color.blue / 65535.0, 0.75);
 	}
 
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);

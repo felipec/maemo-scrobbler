@@ -575,10 +575,10 @@ scrobble_cb(SoupSession *session,
 #define ADD_FIELD(id, fmt, field) \
 	do { \
 		if ((field)) \
-		g_string_append_printf(data, "&" id "[%i]=%" fmt, i, (field)); \
+			g_string_append_printf(data, "&" id "[%i]=%" fmt, i, (field)); \
 		else \
-		g_string_append_printf(data, "&" id "[%i]=", i); \
-	} while(0);
+			g_string_append_printf(data, "&" id "[%i]=", i); \
+	} while (0);
 
 #define EXTRA_URI_ENCODE_CHARS "&+"
 
@@ -683,7 +683,7 @@ now_playing_cb(SoupSession *session,
 		g_string_append_printf(data, "&" id "=%" fmt, (field)); \
 		else \
 		g_string_append_printf(data, "&" id "="); \
-	} while(0);
+	} while (0);
 
 static void
 now_playing(sr_session_t *s,
@@ -817,7 +817,7 @@ ws_params(sr_session_t *s, char **params, ...)
 			break;
 		l = g_list_prepend(l, param_new(key, value));
 		g_string_append_printf(params_str, "&%s=%s", key, value);
-	} while(true);
+	} while (true);
 	va_end(args);
 
 	l = g_list_sort(l, (GCompareFunc) param_compare);
