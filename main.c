@@ -73,6 +73,7 @@ metadata_callback(MafwRenderer *self,
 		sr_session_add_track(s->session, sr_track_dup(track));
 		sr_session_submit(s->session);
 	}
+	sr_service_next(dbus_service);
 clear:
 	g_free(track->artist);
 	track->artist = NULL;

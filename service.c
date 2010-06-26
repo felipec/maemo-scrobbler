@@ -5,6 +5,14 @@ static void *parent_class;
 
 extern void scrobbler_love(gboolean on);
 
+void
+sr_service_next(struct sr_service *service)
+{
+	struct sr_service_class *class;
+	class = g_type_class_peek(SR_SERVICE_TYPE);
+	g_signal_emit(G_OBJECT(service), class->next_sig, 0, service);
+}
+
 static gboolean
 sr_service_love(struct sr_service *service, gboolean on)
 {
@@ -46,6 +54,12 @@ class_init(void *g_class,
 
 	service_class->connection = dbus_g_bus_get(DBUS_BUS_SESSION, NULL);
 	dbus_g_object_type_install_info(SR_SERVICE_TYPE, &dbus_glib_sr_service_object_info);
+
+	service_class->next_sig = g_signal_new("next", G_OBJECT_CLASS_TYPE(g_class),
+					       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+					       0, NULL, NULL,
+					       g_cclosure_marshal_VOID__VOID,
+					       G_TYPE_NONE, 0);
 }
 
 GType

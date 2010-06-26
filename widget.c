@@ -21,6 +21,13 @@ love_cb(GtkWidget *widget,
 	return TRUE;
 }
 
+static void
+next_cb(DBusGProxy *proxy, gpointer user_data)
+{
+	loved = 0;
+	gtk_widget_queue_draw(GTK_WIDGET(user_data));
+}
+
 static GtkWidget *
 build_ui(struct sr_widget *widget)
 {
@@ -47,6 +54,8 @@ instance_init(GTypeInstance *instance,
 	GtkWidget *contents = build_ui(SR_WIDGET(instance));
 	gtk_window_set_default_size(GTK_WINDOW(instance), 96, 96);
 	gtk_container_add(GTK_CONTAINER(instance), contents);
+
+	dbus_g_proxy_connect_signal(sr_service, "Next", G_CALLBACK(next_cb), instance, NULL);
 }
 
 static void *parent_class;
@@ -124,6 +133,7 @@ class_init(void *g_class,
 					       "org.scrobbler.service",
 					       "/org/scrobbler/service",
 					       "org.scrobbler.service");
+	dbus_g_proxy_add_signal(sr_service, "Next", G_TYPE_INVALID, G_TYPE_INVALID);
 	dbus_g_connection_unref(bus);
 }
 

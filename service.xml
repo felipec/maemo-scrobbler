@@ -4,5 +4,6 @@
     <method name="Love">
       <arg type="b" name="on"/>
     </method>
+    <signal name="Next"/>
   </interface>
 </node>
