@@ -3,6 +3,7 @@ CC := gcc
 EXTRA_WARNINGS = -Wextra -Wno-unused-parameter
 
 CFLAGS := -ggdb -Wall -std=c99 $(EXTRA_WARNINGS)
+LDFLAGS := -Wl,--no-undefined
 
 override CFLAGS += -D_XOPEN_SOURCE=500
 
