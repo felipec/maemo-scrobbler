@@ -10,6 +10,7 @@
 #include <signal.h>
 
 #include "scrobble.h"
+#include "service.h"
 
 static GMainLoop *main_loop;
 static GKeyFile *keyfile;
@@ -19,17 +20,39 @@ static char *cache_dir;
 static int skip_track;
 static int connected;
 
+static struct sr_service *dbus_service;
+
 struct service {
 	const char *id;
 	const char *url;
 	sr_session_t *session;
 	char *cache;
+
+	/* web-service */
+	char *api_url;
+	char *api_key;
+	char *api_secret;
 };
 
 static struct service services[] = {
-	{ .id = "lastfm", .url = SR_LASTFM_URL },
-	{ .id = "librefm", .url = SR_LIBREFM_URL },
+	{ .id = "lastfm", .url = SR_LASTFM_URL,
+		.api_url = SR_LASTFM_API_URL,
+		.api_key = "a550e8cdf80179f749786109ae94a644",
+		.api_secret = "92cb9a26e36b18031e5dad8db4edfddb", },
+	{ .id = "librefm", .url = SR_LIBREFM_URL,
+		.api_url = SR_LIBREFM_API_URL,
+		.api_key = "a550e8cdf80179f749786109ae94a644",
+		.api_secret = "92cb9a26e36b18031e5dad8db4edfddb", },
 };
+
+void scrobbler_love(gboolean on)
+{
+	unsigned i;
+	for (i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		sr_session_set_love(s->session, on);
+	}
+}
 
 static void
 metadata_callback(MafwRenderer *self,
@@ -50,6 +73,7 @@ metadata_callback(MafwRenderer *self,
 		sr_session_add_track(s->session, sr_track_dup(track));
 		sr_session_submit(s->session);
 	}
+	sr_service_next(dbus_service);
 clear:
 	g_free(track->artist);
 	track->artist = NULL;
@@ -155,20 +179,33 @@ static void scrobble_cb(sr_session_t *s)
 	sr_session_store_list(s, service->cache);
 }
 
+static void session_key_cb(sr_session_t *s, const char *session_key)
+{
+	struct service *service = s->user_data;
+	g_key_file_set_string(keyfile, service->id, "session-key", session_key);
+	g_file_set_contents(conf_file,
+			    g_key_file_to_data(keyfile, NULL, NULL),
+			    -1, NULL);
+}
+
 static gboolean
 authenticate_session(struct service *s)
 {
 	gchar *username, *password;
+	gchar *session_key;
 	gboolean ok;
 
 	username = g_key_file_get_string(keyfile, s->id, "username", NULL);
 	password = g_key_file_get_string(keyfile, s->id, "password", NULL);
+	session_key = g_key_file_get_string(keyfile, s->id, "session-key", NULL);
 
 	ok = username && password;
 	if (!ok)
 		goto leave;
 
 	sr_session_set_cred(s->session, username, password);
+	if (session_key)
+		sr_session_set_session_key(s->session, session_key);
 	if (connected)
 		sr_session_handshake(s->session);
 
@@ -187,8 +224,12 @@ get_session(struct service *service)
 	s->user_data = service;
 	s->error_cb = error_cb;
 	s->scrobble_cb = scrobble_cb;
+	s->session_key_cb = session_key_cb;
 	service->cache = g_build_filename(cache_dir, service->id, NULL);
 	sr_session_load_list(s, service->cache);
+	if (service->api_key)
+		sr_session_set_api(s, service->api_url,
+				   service->api_key, service->api_secret);
 	service->session = s;
 }
 
@@ -202,13 +243,10 @@ authenticate(void)
 
 	ok = g_key_file_load_from_file(keyfile, conf_file, G_KEY_FILE_NONE, NULL);
 	if (!ok)
-		goto leave;
+		return;
 
 	for (i = 0; i < G_N_ELEMENTS(services); i++)
 		authenticate_session(&services[i]);
-
-leave:
-	g_key_file_free(keyfile);
 }
 
 static void
@@ -254,12 +292,12 @@ signal_handler(int signal)
 static void
 check_proxy(ConIcConnection *connection)
 {
-	const char *host;
-	int port;
 	char *url;
 	unsigned i;
 
 	if (con_ic_connection_get_proxy_mode(connection) == CON_IC_PROXY_MODE_MANUAL) {
+		const char *host;
+		int port;
 		host = con_ic_connection_get_proxy_host(connection, CON_IC_PROXY_PROTOCOL_HTTP);
 		port = con_ic_connection_get_proxy_port(connection, CON_IC_PROXY_PROTOCOL_HTTP);
 		url = g_strdup_printf("http://%s:%i/", host, port);
@@ -330,6 +368,8 @@ int main(void)
 	g_signal_connect(connection, "connection-event", G_CALLBACK(connection_event), NULL);
 	g_object_set(connection, "automatic-connection-events", TRUE, NULL);
 
+	dbus_service = g_object_new(SR_SERVICE_TYPE, NULL);
+
 	track = sr_track_new();
 	track->source = 'P';
 
@@ -340,10 +380,13 @@ int main(void)
 	main_loop = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(main_loop);
 
+	g_object_unref(dbus_service);
 	g_object_unref(connection);
 	dbus_connection_unref(dbus_system);
 
 	g_main_loop_unref(main_loop);
+
+	g_key_file_free(keyfile);
 
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node name="/org/scrobbler/service">
+  <interface name="org.scrobbler.service">
+    <method name="Love">
+      <arg type="b" name="on"/>
+    </method>
+    <signal name="Next"/>
+  </interface>
+</node>

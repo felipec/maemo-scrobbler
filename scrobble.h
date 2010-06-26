@@ -9,6 +9,8 @@
 
 #define SR_LASTFM_URL "http://post.audioscrobbler.com/?hs=true"
 #define SR_LIBREFM_URL "http://turtle.libre.fm/?hs=true"
+#define SR_LASTFM_API_URL "http://ws.audioscrobbler.com/2.0/"
+#define SR_LIBREFM_API_URL "http://alpha.libre.fm/2.0/"
 
 typedef struct sr_track sr_track_t;
 
@@ -31,6 +33,7 @@ struct sr_session {
 	void *user_data;
 	void (*error_cb) (sr_session_t *s, int fatal, const char *msg);
 	void (*scrobble_cb) (sr_session_t *s);
+	void (*session_key_cb) (sr_session_t *s, const char *session_key);
 };
 
 sr_session_t *sr_session_new(const char *url,
@@ -53,5 +56,12 @@ sr_track_t *sr_track_dup(sr_track_t *in);
 void sr_session_handshake(sr_session_t *s);
 void sr_session_submit(sr_session_t *s);
 void sr_session_set_proxy(sr_session_t *s, const char *url);
+
+void sr_session_set_api(sr_session_t *s,
+			const char *api_url,
+			const char *api_key,
+			const char *api_secret);
+void sr_session_set_session_key(sr_session_t *s, const char *session_key);
+void sr_session_set_love(sr_session_t *s, int on);
 
 #endif /* SCROBBLE_H */
