@@ -2,3 +2,6 @@ usr/bin/scrobbler
 usr/lib/hildon-control-panel/libcp-scrobbler.so
 usr/share/applications/hildon-control-panel/scrobbler.desktop
 usr/share/icons/hicolor/48x48/apps/fm.png
+usr/lib/hildon-desktop/libhome-scrobbler.so
+usr/share/applications/hildon-home/scrobbler.desktop
+usr/share/scrobbler/love.png
