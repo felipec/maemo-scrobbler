@@ -517,9 +517,9 @@ drop_submitted(sr_session_t *s)
 	for (c = 0; c < priv->submit_count; c++) {
 		sr_track_t *t;
 		t = g_queue_pop_head(priv->queue);
-		sr_track_free(t);
-		if (g_queue_is_empty(priv->queue))
+		if (!t)
 			break;
+		sr_track_free(t);
 	}
 	g_mutex_unlock(priv->queue_mutex);
 
