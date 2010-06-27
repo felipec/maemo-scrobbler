@@ -521,6 +521,7 @@ drop_submitted(sr_session_t *s)
 			break;
 		sr_track_free(t);
 	}
+	priv->submit_count = 0;
 	g_mutex_unlock(priv->queue_mutex);
 
 	if (!g_queue_is_empty(priv->queue))
@@ -554,24 +555,32 @@ scrobble_cb(SoupSession *session,
 	    gpointer user_data)
 {
 	sr_session_t *s = user_data;
+	struct sr_session_priv *priv = s->priv;
 	const char *data, *end;
 
 	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code)) {
 		hard_failure(s);
-		return;
+		goto nok;
 	}
 
 	data = message->response_body->data;
 	end = strchr(data, '\n');
 	if (!end) /* really bad */
-		return;
+		goto nok;
 
-	if (strncmp(data, "OK", end - data) == 0)
+	if (strncmp(data, "OK", end - data) == 0) {
 		drop_submitted(user_data);
+		return;
+	}
 	else if (strncmp(data, "BADSESSION", end - data) == 0)
 		invalidate_session(s);
 	else
 		hard_failure(s);
+nok:
+	g_mutex_lock(priv->queue_mutex);
+	priv->submit_count = 0;
+	g_mutex_unlock(priv->queue_mutex);
+
 }
 
 #define ADD_FIELD(id, fmt, field) \
@@ -598,7 +607,7 @@ sr_session_submit(sr_session_t *s)
 		return;
 
 	g_mutex_lock(priv->queue_mutex);
-	if (g_queue_is_empty(priv->queue)) {
+	if (g_queue_is_empty(priv->queue) || priv->submit_count) {
 		g_mutex_unlock(priv->queue_mutex);
 		return;
 	}
