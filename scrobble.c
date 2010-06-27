@@ -147,6 +147,8 @@ sr_track_new(void)
 void
 sr_track_free(sr_track_t *t)
 {
+	if (!t)
+		return;
 	g_free(t->artist);
 	g_free(t->title);
 	g_free(t->album);
