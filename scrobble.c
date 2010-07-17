@@ -869,9 +869,10 @@ ws_auth_cb(SoupSession *session,
 
 	data = message->response_body->data;
 
-	begin = strstr(data, "<key>") + 5;
+	begin = strstr(data, "<key>");
 	if (!begin) /* really bad */
 		return;
+	begin += 5;
 	end = strstr(begin, "</key>");
 	if (!end) /* really bad */
 		return;
