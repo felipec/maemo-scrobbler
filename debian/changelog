@@ -1,3 +1,9 @@
+maemo-scrobbler (2.0-3) fremantle; urgency=low
+
+  * Fix to monitor configuration file properly
+
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Sun, 18 Jul 2010 04:23:46 +0300
+
 maemo-scrobbler (2.0-2) fremantle; urgency=low
 
   * Fix crash when web service auth fails
