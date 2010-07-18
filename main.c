@@ -256,7 +256,8 @@ conf_changed(GFileMonitor *monitor,
 	     GFileMonitorEvent event_type,
 	     gpointer user_data)
 {
-	if (event_type == G_FILE_MONITOR_EVENT_CHANGED)
+	if (event_type == G_FILE_MONITOR_EVENT_CHANGED ||
+	    event_type == G_FILE_MONITOR_EVENT_CREATED)
 		authenticate();
 }
 
