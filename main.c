@@ -201,13 +201,16 @@ authenticate_session(struct service *s)
 {
 	gchar *username, *password;
 	gchar *session_key;
-	gboolean ok;
+	gboolean ok = true;
 
 	username = g_key_file_get_string(keyfile, s->id, "username", NULL);
 	password = g_key_file_get_string(keyfile, s->id, "password", NULL);
 	session_key = g_key_file_get_string(keyfile, s->id, "session-key", NULL);
 
-	ok = username && password;
+	if (!username || !username[0])
+		ok = false;
+	if (!password || !password[0])
+		ok = false;
 	if (!ok)
 		goto leave;
 
