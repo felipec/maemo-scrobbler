@@ -9,20 +9,20 @@ static DBusGProxy *sr_service;
 
 gboolean
 love_cb(GtkWidget *widget,
-	GdkEventButton *event,
-	gpointer user_data)
+		GdkEventButton *event,
+		void *user_data)
 {
 	struct sr_widget *self = user_data;
 	loved = ~loved;
 	gtk_widget_queue_draw(GTK_WIDGET(self));
 	dbus_g_proxy_call(sr_service, "Love", NULL,
-			  G_TYPE_BOOLEAN, loved, G_TYPE_INVALID,
-			  G_TYPE_INVALID);
+			G_TYPE_BOOLEAN, loved, G_TYPE_INVALID,
+			G_TYPE_INVALID);
 	return TRUE;
 }
 
 static void
-next_cb(DBusGProxy *proxy, gpointer user_data)
+next_cb(DBusGProxy *proxy, void *user_data)
 {
 	loved = 0;
 	gtk_widget_queue_draw(GTK_WIDGET(user_data));
@@ -49,7 +49,7 @@ build_ui(struct sr_widget *widget)
 
 static void
 instance_init(GTypeInstance *instance,
-	      void *g_class)
+		void *g_class)
 {
 	GtkWidget *contents = build_ui(SR_WIDGET(instance));
 	gtk_window_set_default_size(GTK_WINDOW(instance), 96, 96);
@@ -71,7 +71,7 @@ realize(GtkWidget *widget)
 
 static gboolean
 expose_event(GtkWidget *widget,
-	     GdkEventExpose *event)
+		GdkEventExpose *event)
 {
 	cairo_t *cr;
 	GdkColor color;
@@ -117,7 +117,7 @@ expose_event(GtkWidget *widget,
 
 static void
 class_init(void *g_class,
-	   void *class_data)
+		void *class_data)
 {
 	GtkWidgetClass *widget_class;
 	DBusGConnection *bus;
@@ -130,16 +130,16 @@ class_init(void *g_class,
 
 	bus = dbus_g_bus_get(DBUS_BUS_SESSION, NULL);
 	sr_service = dbus_g_proxy_new_for_name(bus,
-					       "org.scrobbler.service",
-					       "/org/scrobbler/service",
-					       "org.scrobbler.service");
+			"org.scrobbler.service",
+			"/org/scrobbler/service",
+			"org.scrobbler.service");
 	dbus_g_proxy_add_signal(sr_service, "Next", G_TYPE_INVALID, G_TYPE_INVALID);
 	dbus_g_connection_unref(bus);
 }
 
 static void
 class_finalize(void *g_class,
-	       void *class_data)
+		void *class_data)
 {
 	g_object_unref(sr_service);
 }
@@ -162,7 +162,7 @@ register_type(GTypeModule *type_module)
 	};
 
 	type_id = g_type_module_register_type(type_module, HD_TYPE_HOME_PLUGIN_ITEM,
-					      "SrWidget", &type_info, 0);
+			"SrWidget", &type_info, 0);
 }
 
 G_MODULE_EXPORT void hd_plugin_module_load(HDPluginModule *plugin)

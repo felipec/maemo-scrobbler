@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #include "scrobble.h"
 #include "service.h"
@@ -32,6 +33,7 @@ struct service {
 	char *api_url;
 	char *api_key;
 	char *api_secret;
+	bool on;
 };
 
 static struct service services[] = {
@@ -50,16 +52,18 @@ void scrobbler_love(gboolean on)
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_set_love(s->session, on);
 	}
 }
 
 static void
 metadata_callback(MafwRenderer *self,
-		  const gchar *object_id,
-		  GHashTable *metadata,
-		  gpointer user_data,
-		  const GError *error)
+		const gchar *object_id,
+		GHashTable *metadata,
+		void *user_data,
+		const GError *error)
 {
 	unsigned i;
 	if (skip_track) {
@@ -70,6 +74,8 @@ metadata_callback(MafwRenderer *self,
 		goto clear;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_add_track(s->session, sr_track_dup(track));
 		sr_session_submit(s->session);
 	}
@@ -86,9 +92,9 @@ clear:
 
 static void
 metadata_changed_cb(MafwRenderer *renderer,
-		    const gchar *name,
-		    GValueArray *value_array,
-		    gpointer data)
+		const gchar *name,
+		GValueArray *value_array,
+		void *data)
 {
 	GValue *value = g_value_array_get_nth(value_array, 0);
 	if (strcmp(name, "artist") == 0) {
@@ -116,6 +122,8 @@ stop(void)
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_pause(s->session);
 		sr_session_store_list(s->session, s->cache);
 	}
@@ -123,15 +131,15 @@ stop(void)
 
 static void
 state_changed_cb(MafwRenderer *renderer,
-		 MafwPlayState state,
-		 gpointer user_data)
+		MafwPlayState state,
+		void *user_data)
 {
 	switch (state) {
 	case Playing:
 		track->timestamp = time(NULL);
 		mafw_renderer_get_current_metadata(renderer,
-						   metadata_callback,
-						   user_data);
+				metadata_callback,
+				user_data);
 		break;
 	case Stopped:
 		stop();
@@ -143,8 +151,8 @@ state_changed_cb(MafwRenderer *renderer,
 
 static void
 renderer_added_cb(MafwRegistry *registry,
-		  GObject *renderer,
-		  gpointer user_data)
+		GObject *renderer,
+		void *user_data)
 {
 	const gchar *name;
 
@@ -157,18 +165,18 @@ renderer_added_cb(MafwRegistry *registry,
 		return;
 
 	g_signal_connect(renderer,
-			 "state-changed",
-			 G_CALLBACK(state_changed_cb),
-			 user_data);
+			"state-changed",
+			G_CALLBACK(state_changed_cb),
+			user_data);
 	g_signal_connect(renderer,
-			 "metadata-changed",
-			 G_CALLBACK(metadata_changed_cb),
-			 user_data);
+			"metadata-changed",
+			G_CALLBACK(metadata_changed_cb),
+			user_data);
 }
 
 static void error_cb(sr_session_t *s,
-		     int fatal,
-		     const char *msg)
+		int fatal,
+		const char *msg)
 {
 	g_warning(msg);
 }
@@ -184,8 +192,8 @@ static void session_key_cb(sr_session_t *s, const char *session_key)
 	struct service *service = s->user_data;
 	g_key_file_set_string(keyfile, service->id, "session-key", session_key);
 	g_file_set_contents(conf_file,
-			    g_key_file_to_data(keyfile, NULL, NULL),
-			    -1, NULL);
+			g_key_file_to_data(keyfile, NULL, NULL),
+			-1, NULL);
 }
 
 static gboolean
@@ -193,13 +201,16 @@ authenticate_session(struct service *s)
 {
 	gchar *username, *password;
 	gchar *session_key;
-	gboolean ok;
+	gboolean ok = true;
 
 	username = g_key_file_get_string(keyfile, s->id, "username", NULL);
 	password = g_key_file_get_string(keyfile, s->id, "password", NULL);
 	session_key = g_key_file_get_string(keyfile, s->id, "session-key", NULL);
 
-	ok = username && password;
+	if (!username || !username[0])
+		ok = false;
+	if (!password || !password[0])
+		ok = false;
 	if (!ok)
 		goto leave;
 
@@ -208,6 +219,8 @@ authenticate_session(struct service *s)
 		sr_session_set_session_key(s->session, session_key);
 	if (connected)
 		sr_session_handshake(s->session);
+
+	s->on = true;
 
 leave:
 	g_free(username);
@@ -229,7 +242,7 @@ get_session(struct service *service)
 	sr_session_load_list(s, service->cache);
 	if (service->api_key)
 		sr_session_set_api(s, service->api_url,
-				   service->api_key, service->api_secret);
+				service->api_key, service->api_secret);
 	service->session = s;
 }
 
@@ -251,13 +264,13 @@ authenticate(void)
 
 static void
 conf_changed(GFileMonitor *monitor,
-	     GFile *file,
-	     GFile *other_file,
-	     GFileMonitorEvent event_type,
-	     gpointer user_data)
+		GFile *file,
+		GFile *other_file,
+		GFileMonitorEvent event_type,
+		void *user_data)
 {
 	if (event_type == G_FILE_MONITOR_EVENT_CHANGED ||
-	    event_type == G_FILE_MONITOR_EVENT_CREATED)
+			event_type == G_FILE_MONITOR_EVENT_CREATED)
 		authenticate();
 }
 
@@ -279,6 +292,8 @@ timeout(void *data)
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_store_list(s->session, s->cache);
 	}
 	return TRUE;
@@ -312,8 +327,8 @@ check_proxy(ConIcConnection *connection)
 
 static void
 connection_event(ConIcConnection *connection,
-		 ConIcConnectionEvent *event,
-		 gpointer user_data)
+		ConIcConnectionEvent *event,
+		void *user_data)
 {
 	ConIcConnectionStatus status;
 	status = con_ic_connection_event_get_status(event);
@@ -360,8 +375,8 @@ int main(void)
 		g_error("Failed to initialize the shared library");
 
 	g_signal_connect(registry,
-			 "renderer-added",
-			 G_CALLBACK(renderer_added_cb), NULL);
+			"renderer-added",
+			G_CALLBACK(renderer_added_cb), NULL);
 
 	dbus_system = dbus_bus_get(DBUS_BUS_SYSTEM, NULL);
 	dbus_connection_setup_with_g_main(dbus_system, NULL);
@@ -391,6 +406,8 @@ int main(void)
 
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_pause(s->session);
 		sr_session_store_list(s->session, s->cache);
 	}

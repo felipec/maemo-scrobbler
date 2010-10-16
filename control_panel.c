@@ -36,14 +36,14 @@ save_credentials(void)
 	}
 
 	g_file_set_contents(file,
-			    g_key_file_to_data(keyfile, NULL, NULL),
-			    -1, NULL);
+			g_key_file_to_data(keyfile, NULL, NULL),
+			-1, NULL);
 }
 
 static void
 on_dialog_response(GtkDialog *dialog,
-		   gint id,
-		   gpointer user_data)
+		gint id,
+		void *user_data)
 {
 	if (id == GTK_RESPONSE_OK)
 		save_credentials();
@@ -117,8 +117,8 @@ build_service(struct service *service)
 		gtk_misc_set_alignment(GTK_MISC(label_password), 0.0, 0.5);
 		entry_password = hildon_entry_new(HILDON_SIZE_AUTO | HILDON_SIZE_FINGER_HEIGHT);
 		hildon_gtk_entry_set_input_mode(GTK_ENTRY(entry_password),
-						HILDON_GTK_INPUT_MODE_FULL |
-						HILDON_GTK_INPUT_MODE_INVISIBLE);
+				HILDON_GTK_INPUT_MODE_FULL |
+				HILDON_GTK_INPUT_MODE_INVISIBLE);
 
 		gtk_box_pack_start(GTK_BOX(hbox), label_password, TRUE, TRUE, 20);
 		gtk_box_pack_start(GTK_BOX(hbox), entry_password, TRUE, TRUE, 0);
@@ -132,17 +132,17 @@ build_service(struct service *service)
 }
 
 osso_return_t
-execute(osso_context_t *osso, gpointer data, gboolean user_activated)
+execute(osso_context_t *osso, void *data, gboolean user_activated)
 {
 	GtkWidget *dialog;
 	GtkWidget *vbox;
 
 	dialog = gtk_dialog_new_with_buttons("Scrobbler settings",
-					     GTK_WINDOW(data),
-					     GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
-					     dgettext("hildon-libs", "wdgt_bd_done"),
-					     GTK_RESPONSE_OK,
-					     NULL);
+			GTK_WINDOW(data),
+			GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR,
+			dgettext("hildon-libs", "wdgt_bd_done"),
+			GTK_RESPONSE_OK,
+			NULL);
 	vbox = gtk_vbox_new(TRUE, 0);
 
 	unsigned i;
@@ -155,7 +155,7 @@ execute(osso_context_t *osso, gpointer data, gboolean user_activated)
 	load_credentials();
 
 	gtk_container_add(GTK_CONTAINER(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
-			  vbox);
+			vbox);
 
 	g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), NULL);
 
@@ -165,7 +165,7 @@ execute(osso_context_t *osso, gpointer data, gboolean user_activated)
 }
 
 osso_return_t
-save_state(osso_context_t *osso, gpointer data)
+save_state(osso_context_t *osso, void *data)
 {
 	return OSSO_OK;
 }
