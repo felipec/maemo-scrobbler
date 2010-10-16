@@ -48,8 +48,8 @@ static void ws_love(sr_session_t *s);
 
 sr_session_t *
 sr_session_new(const char *url,
-	       const char *client_id,
-	       const char *client_ver)
+		const char *client_id,
+		const char *client_ver)
 {
 	sr_session_t *s;
 	struct sr_session_priv *priv;
@@ -115,8 +115,8 @@ sr_session_free(sr_session_t *s)
 }
 
 void sr_session_set_cred(sr_session_t *s,
-			 char *user,
-			 char *password)
+		char *user,
+		char *password)
 {
 	struct sr_session_priv *priv = s->priv;
 	g_free(priv->user);
@@ -126,8 +126,8 @@ void sr_session_set_cred(sr_session_t *s,
 }
 
 void sr_session_set_cred_hash(sr_session_t *s,
-			      char *user,
-			      char *hash_pwd)
+		char *user,
+		char *hash_pwd)
 {
 	struct sr_session_priv *priv = s->priv;
 	g_free(priv->user);
@@ -175,7 +175,7 @@ sr_track_dup(sr_track_t *in)
 
 static inline void
 check_last(sr_session_t *s,
-	   int timestamp)
+		int timestamp)
 {
 	struct sr_session_priv *priv = s->priv;
 	sr_track_t *c;
@@ -223,7 +223,7 @@ do_now_playing(void *data)
 
 void
 sr_session_add_track(sr_session_t *s,
-		     sr_track_t *t)
+		sr_track_t *t)
 {
 	struct sr_session_priv *priv = s->priv;
 
@@ -240,8 +240,8 @@ sr_session_add_track(sr_session_t *s,
 
 static inline void
 got_field(sr_track_t *t,
-	  char k,
-	  const char *value)
+		char k,
+		const char *value)
 {
 	switch (k) {
 	case 'a':
@@ -284,7 +284,7 @@ track_is_valid(sr_track_t *t)
 
 int
 sr_session_load_list(sr_session_t *s,
-		     const char *file)
+		const char *file)
 {
 	struct sr_session_priv *priv = s->priv;
 	FILE *f;
@@ -338,7 +338,7 @@ sr_session_load_list(sr_session_t *s,
 
 static void
 store_track(void *data,
-	    void *user_data)
+		void *user_data)
 {
 	sr_track_t *t = data;
 	FILE *f = user_data;
@@ -362,7 +362,7 @@ store_track(void *data,
 
 int
 sr_session_store_list(sr_session_t *s,
-		      const char *file)
+		const char *file)
 {
 	FILE *f;
 	struct sr_session_priv *priv = s->priv;
@@ -405,7 +405,7 @@ parse_handshake(sr_session_t *s,
 }
 
 static gboolean
-try_handshake(gpointer data)
+try_handshake(void *data)
 {
 	sr_session_handshake(data);
 	return false;
@@ -417,7 +417,7 @@ handshake_failure(sr_session_t *s)
 	struct sr_session_priv *priv = s->priv;
 
 	g_timeout_add_seconds(priv->handshake_delay * 60,
-			      try_handshake, s);
+			try_handshake, s);
 
 	if (priv->handshake_delay < 120)
 		priv->handshake_delay *= 2;
@@ -425,7 +425,7 @@ handshake_failure(sr_session_t *s)
 
 static inline void
 fatal_error(sr_session_t *s,
-	    const char *msg)
+		const char *msg)
 {
 	if (s->error_cb)
 		s->error_cb(s, true, msg);
@@ -433,8 +433,8 @@ fatal_error(sr_session_t *s,
 
 static void
 handshake_cb(SoupSession *session,
-	     SoupMessage *message,
-	     void *user_data)
+		SoupMessage *message,
+		void *user_data)
 {
 	sr_session_t *s = user_data;
 	struct sr_session_priv *priv = s->priv;
@@ -483,18 +483,18 @@ sr_session_handshake(sr_session_t *s)
 	g_free(tmp);
 
 	handshake_url = g_strdup_printf("%s&p=1.2.1&c=%s&v=%s&u=%s&t=%li&a=%s",
-					priv->url,
-					priv->client_id,
-					priv->client_ver,
-					priv->user,
-					timestamp,
-					auth);
+			priv->url,
+			priv->client_id,
+			priv->client_ver,
+			priv->user,
+			timestamp,
+			auth);
 
 	message = soup_message_new("GET", handshake_url);
 	soup_session_queue_message(priv->soup,
-				   message,
-				   handshake_cb,
-				   s);
+			message,
+			handshake_cb,
+			s);
 
 	g_free(handshake_url);
 	g_free(auth);
@@ -551,8 +551,8 @@ hard_failure(sr_session_t *s)
 
 static void
 scrobble_cb(SoupSession *session,
-	    SoupMessage *message,
-	    gpointer user_data)
+		SoupMessage *message,
+		void *user_data)
 {
 	sr_session_t *s = user_data;
 	struct sr_session_priv *priv = s->priv;
@@ -586,9 +586,9 @@ nok:
 #define ADD_FIELD(id, fmt, field) \
 	do { \
 		if ((field)) \
-			g_string_append_printf(data, "&" id "[%i]=%" fmt, i, (field)); \
+		g_string_append_printf(data, "&" id "[%i]=%" fmt, i, (field)); \
 		else \
-			g_string_append_printf(data, "&" id "[%i]=", i); \
+		g_string_append_printf(data, "&" id "[%i]=", i); \
 	} while (0);
 
 #define EXTRA_URI_ENCODE_CHARS "&+"
@@ -629,10 +629,10 @@ sr_session_submit(sr_session_t *s)
 
 		/* required fields */
 		g_string_append_printf(data, "&a[%i]=%s&t[%i]=%s&i[%i]=%i&o[%i]=%c",
-				       i, artist,
-				       i, title,
-				       i, t->timestamp,
-				       i, t->source);
+				i, artist,
+				i, title,
+				i, t->timestamp,
+				i, t->source);
 
 		/* optional fields */
 		ADD_FIELD("r", "c", t->rating);
@@ -655,21 +655,21 @@ sr_session_submit(sr_session_t *s)
 
 	message = soup_message_new("POST", priv->submit_url);
 	soup_message_set_request(message,
-				 "application/x-www-form-urlencoded",
-				 SOUP_MEMORY_TAKE,
-				 data->str,
-				 data->len);
+			"application/x-www-form-urlencoded",
+			SOUP_MEMORY_TAKE,
+			data->str,
+			data->len);
 	soup_session_queue_message(priv->soup,
-				   message,
-				   scrobble_cb,
-				   s);
+			message,
+			scrobble_cb,
+			s);
 	g_string_free(data, false); /* soup gets ownership */
 }
 
 static void
 now_playing_cb(SoupSession *session,
-	       SoupMessage *message,
-	       gpointer user_data)
+		SoupMessage *message,
+		void *user_data)
 {
 	sr_session_t *s = user_data;
 	const char *data, *end;
@@ -698,7 +698,7 @@ now_playing_cb(SoupSession *session,
 
 static void
 now_playing(sr_session_t *s,
-	    sr_track_t *t)
+		sr_track_t *t)
 {
 	struct sr_session_priv *priv = s->priv;
 	SoupMessage *message;
@@ -736,14 +736,14 @@ now_playing(sr_session_t *s,
 
 	message = soup_message_new("POST", priv->now_playing_url);
 	soup_message_set_request(message,
-				 "application/x-www-form-urlencoded",
-				 SOUP_MEMORY_TAKE,
-				 data->str,
-				 data->len);
+			"application/x-www-form-urlencoded",
+			SOUP_MEMORY_TAKE,
+			data->str,
+			data->len);
 	soup_session_queue_message(priv->soup,
-				   message,
-				   now_playing_cb,
-				   s);
+			message,
+			now_playing_cb,
+			s);
 	g_string_free(data, false); /* soup gets ownership */
 }
 
@@ -763,7 +763,7 @@ sr_session_set_proxy(sr_session_t *s, const char *url)
 
 void
 sr_session_set_session_key(sr_session_t *s,
-			   const char *session_key)
+		const char *session_key)
 {
 	struct sr_session_priv *priv = s->priv;
 	priv->session_key = g_strdup(session_key);
@@ -771,9 +771,9 @@ sr_session_set_session_key(sr_session_t *s,
 
 void
 sr_session_set_api(sr_session_t *s,
-		   const char *api_url,
-		   const char *api_key,
-		   const char *api_secret)
+		const char *api_url,
+		const char *api_key,
+		const char *api_secret)
 {
 	struct sr_session_priv *priv = s->priv;
 	priv->api_url = g_strdup(api_url);
@@ -857,8 +857,8 @@ ws_params(sr_session_t *s, char **params, ...)
 
 static void
 ws_auth_cb(SoupSession *session,
-	   SoupMessage *message,
-	   void *user_data)
+		SoupMessage *message,
+		void *user_data)
 {
 	sr_session_t *s = user_data;
 	struct sr_session_priv *priv = s->priv;
@@ -896,22 +896,22 @@ ws_auth(sr_session_t *s)
 	g_free(tmp);
 
 	ws_params(s, &params,
-		  "api_key", priv->api_key,
-		  "authToken", auth,
-		  "method", "auth.getMobileSession",
-		  "username", priv->user,
-		  NULL);
+			"api_key", priv->api_key,
+			"authToken", auth,
+			"method", "auth.getMobileSession",
+			"username", priv->user,
+			NULL);
 
 	auth_url = g_strdup_printf("%s?%s",
-				   priv->api_url,
-				   params);
+			priv->api_url,
+			params);
 	g_free(params);
 
 	message = soup_message_new("GET", auth_url);
 	soup_session_queue_message(priv->soup,
-				   message,
-				   ws_auth_cb,
-				   s);
+			message,
+			ws_auth_cb,
+			s);
 
 	g_free(auth_url);
 	g_free(auth);
@@ -919,8 +919,8 @@ ws_auth(sr_session_t *s)
 
 static void
 ws_love_cb(SoupSession *session,
-	   SoupMessage *message,
-	   void *user_data)
+		SoupMessage *message,
+		void *user_data)
 {
 	sr_session_t *s = user_data;
 	struct sr_session_priv *priv = s->priv;
@@ -959,23 +959,23 @@ ws_love(sr_session_t *s)
 		return;
 
 	ws_params(s, &params,
-		  "method", "track.love",
-		  "api_key", priv->api_key,
-		  "sk", priv->session_key,
-		  "track", t->title,
-		  "artist", t->artist,
-		  NULL);
+			"method", "track.love",
+			"api_key", priv->api_key,
+			"sk", priv->session_key,
+			"track", t->title,
+			"artist", t->artist,
+			NULL);
 
 	message = soup_message_new("POST", priv->api_url);
 	soup_message_set_request(message,
-				 "application/x-www-form-urlencoded",
-				 SOUP_MEMORY_TAKE,
-				 params,
-				 strlen(params));
+			"application/x-www-form-urlencoded",
+			SOUP_MEMORY_TAKE,
+			params,
+			strlen(params));
 	soup_session_queue_message(priv->soup,
-				   message,
-				   ws_love_cb,
-				   s);
+			message,
+			ws_love_cb,
+			s);
 }
 
 void

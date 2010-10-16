@@ -24,30 +24,30 @@ sr_service_love(struct sr_service *service, gboolean on)
 
 static void
 instance_init(GTypeInstance *instance,
-	      void *g_class)
+		void *g_class)
 {
 	DBusGProxy *driver_proxy;
 	struct sr_service_class *class;
 
 	class = SR_SERVICE_GET_CLASS(instance);
 	dbus_g_connection_register_g_object(class->connection,
-					    "/org/scrobbler/service", G_OBJECT(instance));
+			"/org/scrobbler/service", G_OBJECT(instance));
 
 	driver_proxy = dbus_g_proxy_new_for_name(class->connection,
-						 "org.freedesktop.DBus",
-						 "/org/freedesktop/DBus",
-						 "org.freedesktop.DBus");
+			"org.freedesktop.DBus",
+			"/org/freedesktop/DBus",
+			"org.freedesktop.DBus");
 
 	org_freedesktop_DBus_request_name(driver_proxy,
-					  "org.scrobbler.service",
-					  0, NULL,
-					  NULL);
+			"org.scrobbler.service",
+			0, NULL,
+			NULL);
 	g_object_unref(driver_proxy);
 }
 
 static void
 class_init(void *g_class,
-	   void *class_data)
+		void *class_data)
 {
 	struct sr_service_class *service_class = g_class;
 	parent_class = g_type_class_peek_parent(g_class);
@@ -56,10 +56,10 @@ class_init(void *g_class,
 	dbus_g_object_type_install_info(SR_SERVICE_TYPE, &dbus_glib_sr_service_object_info);
 
 	service_class->next_sig = g_signal_new("next", G_OBJECT_CLASS_TYPE(g_class),
-					       G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
-					       0, NULL, NULL,
-					       g_cclosure_marshal_VOID__VOID,
-					       G_TYPE_NONE, 0);
+			G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+			0, NULL, NULL,
+			g_cclosure_marshal_VOID__VOID,
+			G_TYPE_NONE, 0);
 }
 
 GType

@@ -37,8 +37,8 @@ struct sr_session {
 };
 
 sr_session_t *sr_session_new(const char *url,
-			     const char *client_id,
-			     const char *client_ver);
+		const char *client_id,
+		const char *client_ver);
 void sr_session_free(sr_session_t *s);
 void sr_session_set_cred(sr_session_t *s, char *user, char *password);
 void sr_session_set_cred_hash(sr_session_t *s, char *user, char *hash_pwd);
@@ -58,9 +58,9 @@ void sr_session_submit(sr_session_t *s);
 void sr_session_set_proxy(sr_session_t *s, const char *url);
 
 void sr_session_set_api(sr_session_t *s,
-			const char *api_url,
-			const char *api_key,
-			const char *api_secret);
+		const char *api_url,
+		const char *api_key,
+		const char *api_secret);
 void sr_session_set_session_key(sr_session_t *s, const char *session_key);
 void sr_session_set_love(sr_session_t *s, int on);
 
