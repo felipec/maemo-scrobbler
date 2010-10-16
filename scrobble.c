@@ -288,8 +288,8 @@ sr_session_load_list(sr_session_t *s,
 {
 	struct sr_session_priv *priv = s->priv;
 	FILE *f;
-	char c, *p;
-	char k, v[255];
+	int c;
+	char k, *p, v[255];
 	int stage = 1;
 	sr_track_t *t;
 
@@ -310,7 +310,7 @@ sr_session_load_list(sr_session_t *s,
 				t = sr_track_new();
 				continue;
 			}
-			if (c == (char) EOF) {
+			if (c == EOF) {
 				if (track_is_valid(t))
 					g_queue_push_tail(priv->queue, t);
 				break;
