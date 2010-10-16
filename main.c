@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #include "scrobble.h"
 #include "service.h"
@@ -32,6 +33,7 @@ struct service {
 	char *api_url;
 	char *api_key;
 	char *api_secret;
+	bool on;
 };
 
 static struct service services[] = {
@@ -50,6 +52,8 @@ void scrobbler_love(gboolean on)
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_set_love(s->session, on);
 	}
 }
@@ -70,6 +74,8 @@ metadata_callback(MafwRenderer *self,
 		goto clear;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_add_track(s->session, sr_track_dup(track));
 		sr_session_submit(s->session);
 	}
@@ -116,6 +122,8 @@ stop(void)
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_pause(s->session);
 		sr_session_store_list(s->session, s->cache);
 	}
@@ -209,6 +217,8 @@ authenticate_session(struct service *s)
 	if (connected)
 		sr_session_handshake(s->session);
 
+	s->on = true;
+
 leave:
 	g_free(username);
 	g_free(password);
@@ -279,6 +289,8 @@ timeout(void *data)
 	unsigned i;
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_store_list(s->session, s->cache);
 	}
 	return TRUE;
@@ -391,6 +403,8 @@ int main(void)
 
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
+		if (!s->on)
+			continue;
 		sr_session_pause(s->session);
 		sr_session_store_list(s->session, s->cache);
 	}
