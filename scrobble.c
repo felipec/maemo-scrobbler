@@ -321,6 +321,8 @@ sr_session_load_list(sr_session_t *s,
 			stage++;
 		}
 		else if (stage == 2) {
+			if (c == EOF)
+				break;
 			*p = c;
 			if (c == '\n') {
 				*p = '\0';
