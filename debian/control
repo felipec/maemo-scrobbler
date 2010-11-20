@@ -10,7 +10,7 @@ Package: maemo-scrobbler
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, hildon-libs-l10n-mr | hildon-libs-l10n-mr0
 Description: Scrobbler (last.fm + libre.fm)
- Allows to scrobble to multiple services like last.fm and libre.fm by listening to MAFW.
+ Allows to scrobble to multiple services like last.fm and libre.fm.
 XB-Maemo-Display-Name: Scrobbler
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A
