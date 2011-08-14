@@ -1,9 +1,9 @@
 #include "service.h"
 #include <dbus/dbus-glib-bindings.h>
 
-static void *parent_class;
+#include "helper.h"
 
-extern void scrobbler_love(gboolean on);
+static void *parent_class;
 
 void
 sr_service_next(struct sr_service *service)
@@ -16,7 +16,7 @@ sr_service_next(struct sr_service *service)
 static gboolean
 sr_service_love(struct sr_service *service, gboolean on)
 {
-	scrobbler_love(on);
+	hp_love(on);
 	return TRUE;
 }
 

@@ -34,7 +34,7 @@ all:
 libscrobble.a: scrobble.o
 libscrobble.a: override CFLAGS += $(GLIB_CFLAGS) $(SOUP_CFLAGS)
 
-scrobbler: main.o libscrobble.a service.o
+scrobbler: main.o helper.o libscrobble.a service.o
 scrobbler: override CFLAGS += $(GLIB_CFLAGS) $(GTHREAD_CFLAGS) $(MAFW_CFLAGS) $(CONIC_CFLAGS)
 scrobbler: override LIBS += $(GLIB_LIBS) $(GTHREAD_LIBS) $(MAFW_LIBS) $(CONIC_LIBS) $(SCROBBLE_LIBS) $(DBUS_LIBS)
 bins += scrobbler
