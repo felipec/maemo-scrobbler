@@ -1,5 +1,6 @@
 *.[oad]
 service_glue.h
 
-maemo-scrobbler
+scrobbler
 libcp-scrobbler.so
+libhome-scrobbler.so
