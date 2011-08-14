@@ -30,9 +30,9 @@ struct service {
 	char *cache;
 
 	/* web-service */
-	char *api_url;
-	char *api_key;
-	char *api_secret;
+	const char *api_url;
+	const char *api_key;
+	const char *api_secret;
 	bool on;
 };
 
