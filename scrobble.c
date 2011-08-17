@@ -991,3 +991,21 @@ sr_session_set_love(sr_session_t *s, int on)
 		return;
 	c->rating = on ? 'L' : '\0';
 }
+
+void
+sr_session_love(sr_session_t *s, const char *artist, const char *title, int on)
+{
+	struct sr_session_priv *priv = s->priv;
+	sr_track_t *t;
+
+	t = sr_track_new();
+	t->artist = g_strdup(artist);
+	t->title = g_strdup(title);
+
+	g_mutex_lock(priv->love_queue_mutex);
+	g_queue_push_tail(priv->love_queue, t);
+	g_mutex_unlock(priv->love_queue_mutex);
+
+	if (!priv->api_problems)
+		ws_love(s);
+}
