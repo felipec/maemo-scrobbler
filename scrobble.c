@@ -44,7 +44,7 @@ struct sr_session_priv {
 
 static void now_playing(sr_session_t *s, sr_track_t *t);
 static void ws_auth(sr_session_t *s);
-static void ws_love(sr_session_t *s);
+static void ws_love(sr_session_t *s, bool on);
 
 sr_session_t *
 sr_session_new(const char *url,
@@ -190,7 +190,7 @@ check_last(sr_session_t *s,
 		g_queue_push_tail(priv->love_queue, sr_track_dup(c));
 		g_mutex_unlock(priv->love_queue_mutex);
 		if (!priv->api_problems)
-			ws_love(s);
+			ws_love(s, true);
 	}
 
 	playtime = timestamp - c->timestamp;
@@ -505,7 +505,7 @@ sr_session_handshake(sr_session_t *s)
 		if (!priv->session_key)
 			ws_auth(s);
 		else
-			ws_love(s);
+			ws_love(s, true);
 	}
 }
 
@@ -942,11 +942,11 @@ ws_love_cb(SoupSession *session,
 
 	if (!g_queue_is_empty(priv->love_queue))
 		/* still need to submit more */
-		ws_love(s);
+		ws_love(s, true);
 }
 
 static void
-ws_love(sr_session_t *s)
+ws_love(sr_session_t *s, bool on)
 {
 	struct sr_session_priv *priv = s->priv;
 	SoupMessage *message;
@@ -961,7 +961,7 @@ ws_love(sr_session_t *s)
 		return;
 
 	ws_params(s, &params,
-			"method", "track.love",
+			"method", on ? "track.love" : "track.unlove",
 			"api_key", priv->api_key,
 			"sk", priv->session_key,
 			"track", t->title,
@@ -1007,5 +1007,5 @@ sr_session_love(sr_session_t *s, const char *artist, const char *title, int on)
 	g_mutex_unlock(priv->love_queue_mutex);
 
 	if (!priv->api_problems)
-		ws_love(s);
+		ws_love(s, on);
 }
