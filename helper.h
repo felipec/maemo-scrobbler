@@ -19,6 +19,7 @@ void hp_deinit(void);
 void hp_submit(void);
 void hp_love(bool on);
 void hp_stop(void);
+void hp_next(void);
 
 void hp_set_artist(const char *value);
 void hp_set_title(const char *value);

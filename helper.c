@@ -25,6 +25,7 @@ static int connected;
 
 static DBusConnection *dbus_system;
 static ConIcConnection *connection;
+static int next_timer;
 
 struct service {
 	const char *id;
@@ -267,6 +268,11 @@ void hp_deinit(void)
 
 	g_free(cache_dir);
 	g_free(conf_file);
+
+	if (next_timer) {
+		g_source_remove(next_timer);
+		next_timer = 0;
+	}
 }
 
 void hp_submit(void)
@@ -338,4 +344,21 @@ void hp_set_album(const char *value)
 void hp_set_timestamp(void)
 {
 	track->timestamp = time(NULL);
+}
+
+static gboolean do_next(void *data)
+{
+	next_timer = 0;
+	hp_submit();
+	return FALSE;
+}
+
+void hp_next(void)
+{
+	hp_set_timestamp();
+
+	if (next_timer)
+		g_source_remove(next_timer);
+
+	next_timer = g_timeout_add_seconds(10, do_next, NULL);
 }
