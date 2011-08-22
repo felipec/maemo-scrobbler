@@ -7,6 +7,10 @@
 #ifndef SCROBBLE_H
 #define SCROBBLE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SR_LASTFM_URL "http://post.audioscrobbler.com/?hs=true"
 #define SR_LIBREFM_URL "http://turtle.libre.fm/?hs=true"
 #define SR_LASTFM_API_URL "http://ws.audioscrobbler.com/2.0/"
@@ -63,5 +67,9 @@ void sr_session_set_api(sr_session_t *s,
 		const char *api_secret);
 void sr_session_set_session_key(sr_session_t *s, const char *session_key);
 void sr_session_set_love(sr_session_t *s, int on);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SCROBBLE_H */
