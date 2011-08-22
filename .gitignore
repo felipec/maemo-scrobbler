@@ -1,5 +1,6 @@
 *.[oad]
 service_glue.h
+moc_*
 
 scrobbler
 libcp-scrobbler.so
