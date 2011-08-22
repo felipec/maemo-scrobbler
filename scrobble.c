@@ -195,7 +195,7 @@ check_last(sr_session_t *s,
 
 	playtime = timestamp - c->timestamp;
 	/* did the last track played long enough? */
-	if ((playtime >= 240 || playtime >= c->length / 2) && c->length > 30)
+	if ((playtime >= 240 || playtime >= c->length / 2) && (c->length > 30 || !c->length))
 		g_queue_push_tail(priv->queue, c);
 	else
 		sr_track_free(c);
