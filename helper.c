@@ -220,7 +220,11 @@ void hp_init(void)
 	if (!g_thread_supported())
 		g_thread_init(NULL);
 
+#ifdef MAEMO5
 	conf_file = g_build_filename(g_get_home_dir(), ".osso", "scrobbler", NULL);
+#else
+	conf_file = g_build_filename(g_get_user_config_dir(), "scrobbler", NULL);
+#endif
 	cache_dir = g_build_filename(g_get_user_cache_dir(), "scrobbler", NULL);
 
 	g_mkdir_with_parents(cache_dir, 0755);
