@@ -17,7 +17,8 @@ extern "C" {
 void hp_init(void);
 void hp_deinit(void);
 void hp_submit(void);
-void hp_love(bool on);
+void hp_love_current(bool on);
+void hp_love(const char *artist, const char *title, bool on);
 void hp_stop(void);
 void hp_next(void);
 

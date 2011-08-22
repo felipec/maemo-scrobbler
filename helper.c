@@ -297,13 +297,23 @@ clear:
 	track->album = NULL;
 }
 
-void hp_love(bool on)
+void hp_love_current(bool on)
 {
 	for (unsigned i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
 		if (!s->on)
 			continue;
 		sr_session_set_love(s->session, on);
+	}
+}
+
+void hp_love(const char *artist, const char *title, bool on)
+{
+	for (unsigned i = 0; i < G_N_ELEMENTS(services); i++) {
+		struct service *s = &services[i];
+		if (!s->on)
+			continue;
+		sr_session_love(s->session, artist, title, on);
 	}
 }
 
