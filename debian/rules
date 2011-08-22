@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+
+Makefile:
+	qmake scrobbler.pro
+
+build: Makefile
+	dh_testdir
+	$(MAKE)
+
+clean:
+	dh_testdir
+	dh_testroot
+	dh_clean
+	[ -f Makefile ] && $(MAKE) distclean || true
+
+install: Makefile
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	$(MAKE) install INSTALL_ROOT=$(CURDIR)/debian/tmp
+
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	install -p -m644 -D debian/maemo-scrobbler.conf \
+		debian/maemo-scrobbler/etc/init/apps/scrobbler.conf
+	dh_install --sourcedir=debian/tmp
+	dh_strip --dbg-package=maemo-scrobbler-dbg
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary-indep:
+
+binary: binary-arch binary-indep
+.PHONY: build clean binary-arch binary-indep binary install

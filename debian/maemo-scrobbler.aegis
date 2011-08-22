@@ -1,0 +1,8 @@
+<aegis>
+	<request policy="add">
+		<credential name="UID::user" />
+		<credential name="GRP::metadata-users" />
+
+		<for path="/usr/bin/scrobbler" />
+	</request>
+</aegis>

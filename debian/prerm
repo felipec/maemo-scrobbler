@@ -1,0 +1,2 @@
+#!/bin/sh
+/sbin/stop apps/scrobbler || true
