@@ -2,7 +2,7 @@ Source: maemo-scrobbler
 Section: user/multimedia
 Priority: optional
 Maintainer: Felipe Contreras <felipe.contreras@gmail.com>
-Build-Depends: debhelper (>= 5), pkg-config, libsoup2.4-dev, libglib2.0-dev, libqmafw0-dev, libqmafw-shared0-dev
+Build-Depends: debhelper (>= 5), pkg-config, libsoup2.4-dev, libglib2.0-dev, libqmafw0-dev, libqmafw-shared0-dev, libqmafw-tracker-utility0-dev, libconic0-dev
 Standards-Version: 3.8.0
 XSBC-Bugtracker: http://github.com/felipec/maemo-scrobbler/issues
 
