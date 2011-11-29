@@ -11,6 +11,8 @@
 #include <MafwTrackerModelFactory.h>
 #include <MafwTrackerModelConnection.h>
 
+#include <syslog.h>
+
 Listener::Listener(QObject *parent)
 {
 	setParent(parent);
@@ -50,9 +52,11 @@ bool Listener::init(void)
 
 	return true;
 fail:
+	syslog(LOG_ERR, "failed to connect signals");
 	QCoreApplication::exit(-1);
 	return false;
 tk_fail:
+	syslog(LOG_ERR, "failed to connect to tracker signals");
 	return false;
 }
 
