@@ -15,6 +15,8 @@
 #include <glib.h>
 #include <libsoup/soup.h>
 
+#include "log.h"
+
 struct sr_session_priv {
 	char *url;
 	char *client_id;
@@ -443,6 +445,8 @@ handshake_cb(SoupSession *session,
 	const char *data, *end;
 
 	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code)) {
+		pr_test("%s: bad code: %u\n",
+				__func__, message->status_code);
 		handshake_failure(s);
 		return;
 	}
@@ -451,6 +455,9 @@ handshake_cb(SoupSession *session,
 	end = strchr(data, '\n');
 	if (!end) /* really bad */
 		return;
+
+	pr_test("%s: %.*s\n",
+			__func__, end - data, data);
 
 	if (strncmp(data, "OK", end - data) == 0) {
 		priv->handshake_delay = 1;
@@ -561,6 +568,8 @@ scrobble_cb(SoupSession *session,
 	const char *data, *end;
 
 	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code)) {
+		pr_test("%s: bad code: %u\n",
+				__func__, message->status_code);
 		hard_failure(s);
 		goto nok;
 	}
@@ -569,6 +578,9 @@ scrobble_cb(SoupSession *session,
 	end = strchr(data, '\n');
 	if (!end) /* really bad */
 		goto nok;
+
+	pr_test("%s: %.*s\n",
+			__func__, end - data, data);
 
 	if (strncmp(data, "OK", end - data) == 0) {
 		drop_submitted(user_data);
@@ -676,14 +688,20 @@ now_playing_cb(SoupSession *session,
 	sr_session_t *s = user_data;
 	const char *data, *end;
 
-	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code))
+	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code)) {
+		pr_test("%s: bad code: %u\n",
+				__func__, message->status_code);
 		/* now need to do anything drastic, right? */
 		return;
+	}
 
 	data = message->response_body->data;
 	end = strchr(data, '\n');
 	if (!end) /* really bad */
 		return;
+
+	pr_test("%s: %.*s\n",
+			__func__, end - data, data);
 
 	if (strncmp(data, "BADSESSION", end - data) == 0)
 		invalidate_session(s);
@@ -735,6 +753,8 @@ now_playing(sr_session_t *s,
 	g_free(title);
 	g_free(album);
 	g_free(mbid);
+
+	pr_test("%s: %.*s", __func__, data->len, data->str);
 
 	message = soup_message_new("POST", priv->now_playing_url);
 	soup_message_set_request(message,
@@ -866,8 +886,11 @@ ws_auth_cb(SoupSession *session,
 	struct sr_session_priv *priv = s->priv;
 	const char *data, *begin, *end;
 
-	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code))
+	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code)) {
+		pr_test("%s: bad code: %u\n",
+				__func__, message->status_code);
 		return;
+	}
 
 	data = message->response_body->data;
 
@@ -929,6 +952,8 @@ ws_love_cb(SoupSession *session,
 	sr_track_t *t;
 
 	if (!SOUP_STATUS_IS_SUCCESSFUL(message->status_code)) {
+		pr_test("%s: bad code: %u\n",
+				__func__, message->status_code);
 		priv->api_problems = true;
 		return;
 	}

@@ -16,6 +16,9 @@
 #include "helper.h"
 #include "scrobble.h"
 
+#include <syslog.h>
+#include "log.h"
+
 static sr_track_t *track;
 
 static GKeyFile *keyfile;
@@ -284,6 +287,7 @@ void hp_submit(void)
 	unsigned i;
 	if (!track->artist || !track->title)
 		goto clear;
+	syslog(LOG_INFO, "%s - %s", track->artist, track->title);
 	for (i = 0; i < G_N_ELEMENTS(services); i++) {
 		struct service *s = &services[i];
 		if (!s->on)
