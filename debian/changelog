@@ -1,3 +1,9 @@
+maemo-scrobbler (2.0-2) harmattan; urgency=low
+
+  * Improve error handling
+
+ -- Felipe Contreras <felipe.contreras@gmail.com>  Tue, 29 Nov 2011 17:43:57 +0200
+
 maemo-scrobbler (2.0-1) harmattan; urgency=low
 
   * Initial release
