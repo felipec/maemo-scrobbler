@@ -8,7 +8,7 @@ XSBC-Bugtracker: http://github.com/felipec/maemo-scrobbler/issues
 
 Package: maemo-scrobbler
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}, libc6 (>= 2.4), libconic0, libdbus-1-3 (>= 1.0.2), libdbus-glib-1-2 (>= 0.71), libgcc1 (>= 1:4.1.1), libglib2.0-0 (>= 2.16.0), libqmafw-shared0, libqmafw-tracker-utility0, libqmafw0, libqtcore4, libqtgui4, libsoup2.4-1, libstdc++6 (>= 4.4.0)
 Description: Scrobbler (last.fm + libre.fm)
  Allows to scrobble to multiple services like last.fm and libre.fm.
 XB-Maemo-Display-Name: Scrobbler
