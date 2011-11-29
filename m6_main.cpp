@@ -122,8 +122,7 @@ void Listener::got_info(QList<QStringList> rows, bool foo)
 	}
 }
 
-static void
-signal_handler(int signal)
+static void signal_handler(int signal)
 {
 	QCoreApplication::exit(0);
 }
