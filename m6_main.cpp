@@ -14,30 +14,46 @@
 Listener::Listener(QObject *parent)
 {
 	setParent(parent);
+}
 
+bool Listener::init(void)
+{
 	registry = MafwRegistry::instance();
 	shared = MafwShared::instance();
 	shared->initTracking(registry);
 
 	renderer = registry->renderer("mafw_gst_renderer");
 
-	connect(renderer, SIGNAL(mediaChanged(int, const MafwContent&)),
-			this, SLOT(next(void)));
+	if (!connect(renderer, SIGNAL(mediaChanged(int, const MafwContent&)),
+			this, SLOT(next(void))))
+		goto fail;
 
-	connect(renderer, SIGNAL(stateChanged(MafwRenderer::State)),
-			this, SLOT(state_changed(MafwRenderer::State)));
+	if (!connect(renderer, SIGNAL(stateChanged(MafwRenderer::State)),
+			this, SLOT(state_changed(MafwRenderer::State))))
+		goto fail;
 
-	connect(renderer, SIGNAL(metadataChanged(const QString&, const QList<QVariant>&)),
-			this, SLOT(metadata_changed(const QString&, const QList<QVariant>&)));
+	if (!connect(renderer, SIGNAL(metadataChanged(const QString&, const QList<QVariant>&)),
+			this, SLOT(metadata_changed(const QString&, const QList<QVariant>&))))
+		goto fail;
 
 	tk_factory = new MafwTrackerModelFactory();
 	tk_factory->init();
 
 	tk_conn = tk_factory->trackerConnection();
-	connect(tk_conn, SIGNAL(musicFavorited(const QSet<int>&)),
-			this, SLOT(favorited(const QSet<int>&)));
-	connect(tk_conn, SIGNAL(musicUnfavorited(const QSet<int>&)),
-			this, SLOT(unfavorited(const QSet<int>&)));
+	if (!connect(tk_conn, SIGNAL(musicFavorited(const QSet<int>&)),
+			this, SLOT(favorited(const QSet<int>&))))
+		goto tk_fail;
+
+	if (!connect(tk_conn, SIGNAL(musicUnfavorited(const QSet<int>&)),
+			this, SLOT(unfavorited(const QSet<int>&))))
+		goto tk_fail;
+
+	return true;
+fail:
+	QCoreApplication::exit(-1);
+	return false;
+tk_fail:
+	return false;
 }
 
 void Listener::next(void)
@@ -106,8 +122,7 @@ void Listener::got_info(QList<QStringList> rows, bool foo)
 	}
 }
 
-static void
-signal_handler(int signal)
+static void signal_handler(int signal)
 {
 	QCoreApplication::exit(0);
 }
@@ -124,8 +139,14 @@ int main(int argc, char *argv[])
 	QCoreApplication a(argc, argv);
 	Listener listener(&a);
 
+	if (!listener.init()) {
+		r = -1;
+		goto leave;
+	}
+
 	r = a.exec();
 
+leave:
 	hp_deinit();
 
 	return r;

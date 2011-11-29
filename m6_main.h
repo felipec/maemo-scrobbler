@@ -14,6 +14,7 @@ class Listener : public QObject
 
 public:
 	Listener(QObject *parent = NULL);
+	bool init(void);
 
 private slots:
 	void next(void);
